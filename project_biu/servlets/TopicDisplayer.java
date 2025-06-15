@@ -23,6 +23,15 @@ public class TopicDisplayer implements Servlet {
     public void handle(RequestInfo ri, OutputStream toClient) throws Exception {
         PrintWriter writer = new PrintWriter(toClient, true);
         
+        // Add CORS headers to allow iframe requests
+        writer.println("HTTP/1.1 200 OK");
+        writer.println("Content-Type: text/html; charset=UTF-8");
+        writer.println("Access-Control-Allow-Origin: *");
+        writer.println("Access-Control-Allow-Methods: GET, OPTIONS");
+        writer.println("Access-Control-Allow-Headers: Content-Type");
+        writer.println("Connection: close");
+        writer.println();
+        
         try {
             // Extract parameters from the request
             String topicName = ri.getParameters().get("topic");

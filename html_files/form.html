@@ -167,7 +167,7 @@
             formData.append('configFile', fileInput.files[0]);
             
             try {
-                const response = await fetch('http://localhost:8080/upload', {
+                const response = await fetch('/upload', {
                     method: 'POST',
                     body: formData
                 });
@@ -212,7 +212,7 @@
             publishBtn.textContent = 'Sending...';
             
             try {
-                const url = `http://localhost:8080/publish?topic=${encodeURIComponent(topic)}&message=${encodeURIComponent(message)}`;
+                const url = `/publish?topic=${encodeURIComponent(topic)}&message=${encodeURIComponent(message)}`;
                 const response = await fetch(url, {
                     method: 'GET'
                 });
