@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Forms</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f9f9f9;
+            margin: 0;
+        }
+        .form-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-title {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007bff;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="file"], input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .status-message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .results-table th,
+        .results-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .results-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .results-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <!-- Upload Configuration Form -->
+    <div class="form-container">
+        <div class="form-title">📁 Upload Configuration</div>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="configFile">Select Configuration File:</label>
+                <input type="file" id="configFile" name="configFile" accept=".conf,.config,.txt,.json" required>
+            </div>
+            <button type="submit" id="deployBtn">Deploy</button>
+            <div id="uploadStatus" class="status-message"></div>
+        </form>
+    </div>
+
+    <!-- Send Topic Message Form -->
+    <div class="form-container">
+        <div class="form-title">📤 Send Topic Message</div>
+        <form id="publishForm">
+            <div class="form-group">
+                <label for="topic">Topic:</label>
+                <input type="text" id="topic" name="topic" placeholder="Enter topic name" required>
+            </div>
+            <div class="form-group">
+                <label for="message">Message:</label>
+                <textarea id="message" name="message" rows="3" placeholder="Enter your message" required></textarea>
+            </div>
+            <button type="submit" id="publishBtn">Send Message</button>
+            <div id="publishStatus" class="status-message"></div>
+        </form>
+        
+        <!-- Results Table -->
+        <div id="resultsContainer" style="display: none;">
+            <h4>📊 Message Results:</h4>
+            <table class="results-table" id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Topic</th>
+                        <th>Message</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Upload Configuration Form Handler
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const deployBtn = document.getElementById('deployBtn');
+            const statusDiv = document.getElementById('uploadStatus');
+            const fileInput = document.getElementById('configFile');
+            
+            if (!fileInput.files[0]) {
+                showStatus(statusDiv, 'Please select a file to upload.', 'error');
+                return;
+            }
+            
+            // Disable button and show loading
+            deployBtn.disabled = true;
+            deployBtn.textContent = 'Deploying...';
+            
+            const formData = new FormData();
+            formData.append('configFile', fileInput.files[0]);
+            
+            try {
+                const response = await fetch('http://localhost:8080/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const result = await response.text();
+                    showStatus(statusDiv, 'Configuration deployed successfully!', 'success');
+                    
+                    // Tell parent frame to show graph
+                    window.parent.postMessage({action: 'showGraph'}, '*');
+                    
+                    // Send result to center panel
+                    const centerFrame = window.parent.document.getElementById('centerFrame');
+                    if (centerFrame) {
+                        // For now, just show the graph. Later this could show the actual response.
+                        centerFrame.src = 'graph.html';
+                    }
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                showStatus(statusDiv, `Upload failed: ${error.message}`, 'error');
+                console.error('Upload error:', error);
+            } finally {
+                // Re-enable button
+                deployBtn.disabled = false;
+                deployBtn.textContent = 'Deploy';
+            }
+        });
+
+        // Send Topic Message Form Handler
+        document.getElementById('publishForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const publishBtn = document.getElementById('publishBtn');
+            const statusDiv = document.getElementById('publishStatus');
+            const topic = document.getElementById('topic').value;
+            const message = document.getElementById('message').value;
+            
+            // Disable button and show loading
+            publishBtn.disabled = true;
+            publishBtn.textContent = 'Sending...';
+            
+            try {
+                const url = `http://localhost:8080/publish?topic=${encodeURIComponent(topic)}&message=${encodeURIComponent(message)}`;
+                const response = await fetch(url, {
+                    method: 'GET'
+                });
+                
+                if (response.ok) {
+                    const result = await response.text();
+                    showStatus(statusDiv, 'Message sent successfully!', 'success');
+                    
+                    // Add result to table
+                    addResultToTable(topic, message, 'Success');
+                    
+                    // Clear form
+                    document.getElementById('topic').value = '';
+                    document.getElementById('message').value = '';
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                showStatus(statusDiv, `Send failed: ${error.message}`, 'error');
+                addResultToTable(topic, message, 'Failed');
+                console.error('Publish error:', error);
+            } finally {
+                // Re-enable button
+                publishBtn.disabled = false;
+                publishBtn.textContent = 'Send Message';
+            }
+        });
+
+        // Helper function to show status messages
+        function showStatus(element, message, type) {
+            element.textContent = message;
+            element.className = `status-message ${type}`;
+            element.style.display = 'block';
+            
+            // Hide after 5 seconds
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        // Helper function to add results to table
+        function addResultToTable(topic, message, status) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const resultsBody = document.getElementById('resultsBody');
+            
+            // Show table if hidden
+            resultsContainer.style.display = 'block';
+            
+            // Create new row
+            const row = resultsBody.insertRow(0); // Insert at top
+            const timestamp = new Date().toLocaleString();
+            
+            row.insertCell(0).textContent = timestamp;
+            row.insertCell(1).textContent = topic;
+            row.insertCell(2).textContent = message.length > 50 ? message.substring(0, 50) + '...' : message;
+            row.insertCell(3).textContent = status;
+            
+            // Color-code status
+            const statusCell = row.cells[3];
+            if (status === 'Success') {
+                statusCell.style.color = 'green';
+                statusCell.style.fontWeight = 'bold';
+            } else {
+                statusCell.style.color = 'red';
+                statusCell.style.fontWeight = 'bold';
+            }
+        }
+    </script>
+</body>
+</html>

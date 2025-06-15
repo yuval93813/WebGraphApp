@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computation Graph Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            overflow: auto;
+        }
+        .graph-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            min-height: calc(100vh - 80px);
+        }
+        .graph-title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .graph-canvas {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+            width: 100%;
+            height: 500px;
+            position: relative;
+            overflow: visible;
+        }
+        .node {
+            position: absolute;
+            background: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #45a049;
+        }
+        .node:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .node.operator {
+            background: #FF6B6B;
+            border-color: #e55353;
+        }
+        .node.input {
+            background: #4ECDC4;
+            border-color: #3bb5ad;
+        }
+        .node.output {
+            background: #45B7D1;
+            border-color: #3498db;
+        }
+        .arrow {
+            position: absolute;
+            pointer-events: none;
+        }
+        .arrow-line {
+            stroke: #666;
+            stroke-width: 2;
+            marker-end: url(#arrowhead);
+        }
+        .controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 5px;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .info-panel {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="graph-container">
+        <div class="graph-title">🔗 Computation Graph Visualization</div>
+        
+        <div class="controls">
+            <button class="btn" onclick="generateExampleGraph()">Example: (A + B) * (A - B)</button>
+            <button class="btn" onclick="generateComplexGraph()">Complex Example</button>
+            <button class="btn" onclick="clearGraph()">Clear Graph</button>
+        </div>
+        
+        <div class="graph-canvas" id="graphCanvas">
+            <svg width="100%" height="100%" style="position: absolute; top: 0; left: 0;">
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+                            refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#666" />
+                    </marker>
+                </defs>
+            </svg>
+        </div>
+        
+        <div class="info-panel">
+            <h4>📋 Graph Information</h4>
+            <div id="graphInfo">
+                <p>Click "Example" buttons to generate sample computation graphs.</p>
+                <p><strong>Node Types:</strong></p>
+                <ul>
+                    <li><span style="color: #4ECDC4; font-weight: bold;">■</span> Input Variables (A, B, C, etc.)</li>
+                    <li><span style="color: #FF6B6B; font-weight: bold;">■</span> Operators (+, -, *, /, etc.)</li>
+                    <li><span style="color: #45B7D1; font-weight: bold;">■</span> Output Results</li>
+                    <li><span style="color: #4CAF50; font-weight: bold;">■</span> Intermediate Results</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let nodeId = 0;
+        
+        // Graph data structure
+        let nodes = [];
+        let edges = [];
+        
+        // Node class
+        class GraphNode {
+            constructor(label, type, x, y) {
+                this.id = ++nodeId;
+                this.label = label;
+                this.type = type; // 'input', 'operator', 'output', 'intermediate'
+                this.x = x;
+                this.y = y;
+                this.element = null;
+            }
+        }
+        
+        // Edge class
+        class GraphEdge {
+            constructor(fromNode, toNode) {
+                this.from = fromNode;
+                this.to = toNode;
+            }
+        }
+        
+        // Create a node in the DOM
+        function createNodeElement(node) {
+            const canvas = document.getElementById('graphCanvas');
+            const nodeElement = document.createElement('div');
+            nodeElement.className = `node ${node.type}`;
+            nodeElement.textContent = node.label;
+            nodeElement.style.left = `${node.x}px`;
+            nodeElement.style.top = `${node.y}px`;
+            nodeElement.title = `${node.type}: ${node.label}`;
+            
+            // Add click handler
+            nodeElement.addEventListener('click', () => {
+                updateGraphInfo(node);
+            });
+            
+            canvas.appendChild(nodeElement);
+            node.element = nodeElement;
+            return nodeElement;
+        }
+        
+        // Draw an arrow between two nodes
+        function drawArrow(fromNode, toNode) {
+            const svg = document.querySelector('#graphCanvas svg');
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            
+            // Calculate connection points (center of nodes)
+            const fromX = fromNode.x + 40; // Approximate center
+            const fromY = fromNode.y + 20;
+            const toX = toNode.x + 40;
+            const toY = toNode.y + 20;
+            
+            line.setAttribute('x1', fromX);
+            line.setAttribute('y1', fromY);
+            line.setAttribute('x2', toX);
+            line.setAttribute('y2', toY);
+            line.setAttribute('class', 'arrow-line');
+            
+            svg.appendChild(line);
+        }
+        
+        // Clear the graph
+        function clearGraph() {
+            const canvas = document.getElementById('graphCanvas');
+            const svg = canvas.querySelector('svg');
+            
+            // Remove all nodes
+            const nodeElements = canvas.querySelectorAll('.node');
+            nodeElements.forEach(el => el.remove());
+            
+            // Remove all arrows
+            const lines = svg.querySelectorAll('.arrow-line');
+            lines.forEach(line => line.remove());
+            
+            // Reset data
+            nodes = [];
+            edges = [];
+            nodeId = 0;
+            
+            document.getElementById('graphInfo').innerHTML = '<p>Graph cleared. Click "Example" buttons to generate sample computation graphs.</p>';
+        }
+        
+        // Generate example graph: (A + B) * (A - B)
+        function generateExampleGraph() {
+            clearGraph();
+            
+            // Create nodes
+            const nodeA1 = new GraphNode('A', 'input', 50, 50);
+            const nodeB1 = new GraphNode('B', 'input', 50, 150);
+            const nodePlus = new GraphNode('+', 'operator', 200, 100);
+            
+            const nodeA2 = new GraphNode('A', 'input', 50, 250);
+            const nodeB2 = new GraphNode('B', 'input', 50, 350);
+            const nodeMinus = new GraphNode('-', 'operator', 200, 300);
+            
+            const nodeMultiply = new GraphNode('×', 'operator', 400, 200);
+            const nodeResult = new GraphNode('Result', 'output', 550, 200);
+            
+            // Add nodes to array
+            nodes = [nodeA1, nodeB1, nodePlus, nodeA2, nodeB2, nodeMinus, nodeMultiply, nodeResult];
+            
+            // Create node elements
+            nodes.forEach(node => createNodeElement(node));
+            
+            // Define edges
+            edges = [
+                new GraphEdge(nodeA1, nodePlus),
+                new GraphEdge(nodeB1, nodePlus),
+                new GraphEdge(nodeA2, nodeMinus),
+                new GraphEdge(nodeB2, nodeMinus),
+                new GraphEdge(nodePlus, nodeMultiply),
+                new GraphEdge(nodeMinus, nodeMultiply),
+                new GraphEdge(nodeMultiply, nodeResult)
+            ];
+            
+            // Draw arrows
+            edges.forEach(edge => drawArrow(edge.from, edge.to));
+            
+            // Update info
+            updateGraphInfo(null, 'Expression: (A + B) × (A - B)\nThis represents the algebraic identity for the difference of squares.');
+        }
+        
+        // Generate a more complex example
+        function generateComplexGraph() {
+            clearGraph();
+            
+            // Create nodes for: ((A + B) * C) / (D - E)
+            const nodeA = new GraphNode('A', 'input', 50, 100);
+            const nodeB = new GraphNode('B', 'input', 50, 200);
+            const nodeC = new GraphNode('C', 'input', 250, 50);
+            const nodeD = new GraphNode('D', 'input', 50, 300);
+            const nodeE = new GraphNode('E', 'input', 50, 400);
+            
+            const nodePlus = new GraphNode('+', 'operator', 200, 150);
+            const nodeMinus = new GraphNode('-', 'operator', 200, 350);
+            const nodeMultiply = new GraphNode('×', 'operator', 400, 100);
+            const nodeDivide = new GraphNode('÷', 'operator', 550, 225);
+            const nodeResult = new GraphNode('Final', 'output', 700, 225);
+            
+            // Add nodes to array
+            nodes = [nodeA, nodeB, nodeC, nodeD, nodeE, nodePlus, nodeMinus, nodeMultiply, nodeDivide, nodeResult];
+            
+            // Create node elements
+            nodes.forEach(node => createNodeElement(node));
+            
+            // Define edges
+            edges = [
+                new GraphEdge(nodeA, nodePlus),
+                new GraphEdge(nodeB, nodePlus),
+                new GraphEdge(nodePlus, nodeMultiply),
+                new GraphEdge(nodeC, nodeMultiply),
+                new GraphEdge(nodeD, nodeMinus),
+                new GraphEdge(nodeE, nodeMinus),
+                new GraphEdge(nodeMultiply, nodeDivide),
+                new GraphEdge(nodeMinus, nodeDivide),
+                new GraphEdge(nodeDivide, nodeResult)
+            ];
+            
+            // Draw arrows
+            edges.forEach(edge => drawArrow(edge.from, edge.to));
+            
+            // Update info
+            updateGraphInfo(null, 'Expression: ((A + B) × C) ÷ (D - E)\nA more complex computation graph with multiple operations.');
+        }
+        
+        // Update graph information panel
+        function updateGraphInfo(selectedNode, customMessage) {
+            const infoDiv = document.getElementById('graphInfo');
+            
+            if (customMessage) {
+                infoDiv.innerHTML = `<p><strong>Graph Generated!</strong></p><p>${customMessage.replace('\n', '</p><p>')}</p>`;
+                return;
+            }
+            
+            if (selectedNode) {
+                infoDiv.innerHTML = `
+                    <p><strong>Selected Node:</strong> ${selectedNode.label}</p>
+                    <p><strong>Type:</strong> ${selectedNode.type}</p>
+                    <p><strong>Position:</strong> (${selectedNode.x}, ${selectedNode.y})</p>
+                    <p><strong>ID:</strong> ${selectedNode.id}</p>
+                `;
+            } else {
+                infoDiv.innerHTML = `
+                    <p><strong>Graph Statistics:</strong></p>
+                    <p>Nodes: ${nodes.length}</p>
+                    <p>Edges: ${edges.length}</p>
+                    <p>Click on a node to see its details.</p>
+                `;
+            }
+        }
+        
+        // Initialize with example graph
+        window.addEventListener('load', () => {
+            generateExampleGraph();
+        });
+    </script>
+</body>
+</html>

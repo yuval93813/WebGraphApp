@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placeholder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+        .placeholder-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+        h2 {
+            margin: 0 0 15px 0;
+            font-size: 2em;
+            font-weight: 300;
+        }
+        p {
+            margin: 0;
+            font-size: 1.1em;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        .pulse {
+            animation: pulse 2s ease-in-out infinite alternate;
+        }
+        @keyframes pulse {
+            from { opacity: 0.6; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="placeholder-container">
+        <div class="icon pulse">⚙️</div>
+        <h2>System Ready</h2>
+        <p>Waiting for configuration deployment...<br>
+        Upload a configuration file to visualize the computation graph.</p>
+    </div>
+</body>
+</html>
