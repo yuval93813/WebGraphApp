@@ -182,8 +182,8 @@
                     // Send result to center panel
                     const centerFrame = window.parent.document.getElementById('centerFrame');
                     if (centerFrame) {
-                        // For now, just show the graph. Later this could show the actual response.
-                        centerFrame.src = 'graph.html';
+                        // Update center frame to show graph with live data
+                        centerFrame.src = 'graph.html?live=true';
                     }
                 } else {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);

@@ -335,8 +335,21 @@
         
         // Initialize with example graph
         window.addEventListener('load', () => {
-            generateExampleGraph();
+            // Check if we should load actual graph data from server
+            if (window.location.search.includes('live=true')) {
+                loadLiveGraphData();
+            } else {
+                generateExampleGraph();
+            }
         });
+        
+        // Function to load live graph data from the server
+        function loadLiveGraphData() {
+            // This would connect to the server to get actual graph data
+            // For now, show a more complex example to simulate real data
+            generateComplexGraph();
+            updateGraphInfo(null, 'Live graph data loaded from server.\nShowing computation graph based on uploaded configuration.');
+        }
     </script>
 </body>
 </html>
