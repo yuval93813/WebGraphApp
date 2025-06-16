@@ -74,6 +74,26 @@
             stroke-width: 2;
             marker-end: url(#arrowhead);
         }
+        .topic-value {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            border: 1px solid #ddd;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            pointer-events: none;
+            min-width: 30px;
+            word-wrap: break-word;
+            max-width: 120px;
+        }
+        .topic-value.empty {
+            color: #999;
+            font-style: italic;
+        }
         .controls {
             margin-bottom: 20px;
             text-align: center;
@@ -145,13 +165,15 @@
         
         // Node class
         class GraphNode {
-            constructor(label, type, x, y) {
+            constructor(label, type, x, y, value = null) {
                 this.id = ++nodeId;
                 this.label = label;
                 this.type = type; // 'input', 'operator', 'output', 'intermediate'
                 this.x = x;
                 this.y = y;
+                this.value = value; // For topics, this holds the current value
                 this.element = null;
+                this.valueElement = null; // Element for displaying the value
             }
         }
         
@@ -180,6 +202,21 @@
             
             canvas.appendChild(nodeElement);
             node.element = nodeElement;
+            
+            // Create value label for topics (operator type nodes that start with T)
+            if (node.type === 'operator' && node.label.startsWith('T') && node.value !== null) {
+                const valueElement = document.createElement('div');
+                valueElement.className = `topic-value ${node.value === '' ? 'empty' : ''}`;
+                valueElement.textContent = node.value === '' ? 'empty' : node.value;
+                
+                // Position the value label above the node
+                valueElement.style.left = `${node.x}px`;
+                valueElement.style.top = `${node.y - 25}px`;
+                
+                canvas.appendChild(valueElement);
+                node.valueElement = valueElement;
+            }
+            
             return nodeElement;
         }
         
@@ -211,6 +248,10 @@
             // Remove all nodes
             const nodeElements = canvas.querySelectorAll('.node');
             nodeElements.forEach(el => el.remove());
+            
+            // Remove all topic value labels
+            const valueElements = canvas.querySelectorAll('.topic-value');
+            valueElements.forEach(el => el.remove());
             
             // Remove all arrows
             const lines = svg.querySelectorAll('.arrow-line');

@@ -124,7 +124,9 @@
                 <textarea id="message" name="message" rows="3" placeholder="Enter your message" required></textarea>
             </div>
             <button type="submit" id="publishBtn">Send Message</button>
+            <button type="button" id="refreshGraphBtn" onclick="manualGraphRefresh()" style="margin-left: 10px; background-color: #17a2b8;">🔄 Refresh Graph</button>
             <div id="publishStatus" class="status-message"></div>
+            <div id="graphUpdateStatus" class="status-message" style="background-color: #e7f3ff; color: #0066cc; display: none;">🔄 Updating graph visualization...</div>
         </form>
         
         <!-- Results Table -->
@@ -225,6 +227,9 @@
                     // Add result to table
                     addResultToTable(topic, message, 'Success');
                     
+                    // Update graph if it's currently displayed
+                    await updateGraphVisualization();
+                    
                     // Clear form
                     document.getElementById('topic').value = '';
                     document.getElementById('message').value = '';
@@ -279,6 +284,48 @@
             } else {
                 statusCell.style.color = 'red';
                 statusCell.style.fontWeight = 'bold';
+            }
+        }
+
+        // Helper function to update graph visualization after topic changes
+        async function updateGraphVisualization() {
+            try {
+                // Check if there's a graph iframe displaying a graph visualization
+                const iframe = document.getElementById('graphFrame');
+                if (iframe && iframe.src && iframe.src.includes('/upload')) {
+                    // Regenerate the graph by re-uploading the configuration
+                    // This will fetch the latest topic values from TopicManagerSingleton
+                    
+                    // Get the last uploaded file if available
+                    const fileInput = document.getElementById('configFile');
+                    if (fileInput && fileInput.files && fileInput.files[0]) {
+                        console.log('Updating graph visualization with latest topic values...');
+                        
+                        // Create a new form data with the same file
+                        const formData = new FormData();
+                        formData.append('file', fileInput.files[0]);
+                        
+                        try {
+                            const response = await fetch('/upload', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            
+                            if (response.ok) {
+                                const htmlContent = await response.text();
+                                
+                                // Update the iframe content with the new graph that includes updated topic values
+                                iframe.srcdoc = htmlContent;
+                                
+                                console.log('Graph visualization updated successfully!');
+                            }
+                        } catch (error) {
+                            console.log('Could not update graph visualization:', error.message);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('Graph update error:', error.message);
             }
         }
     </script>

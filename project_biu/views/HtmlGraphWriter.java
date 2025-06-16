@@ -2,201 +2,244 @@ package views;
 
 import graph.Graph;
 import graph.Node;
+import graph.TopicManagerSingleton;
+import graph.Topic;
 import java.util.HashMap;
 import java.util.Map;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * HtmlGraphWriter class responsible for generating HTML representations of Graph objects.
- * This class follows the separation of concerns principle by separating data visualization 
- * from business logic.
+ * This class modifies the existing graph.html template with dynamic data instead of 
+ * creating completely new HTML from scratch.
  */
 public class HtmlGraphWriter {
     
+    // Path to the template graph.html file
+    private static final String TEMPLATE_PATH = "html_files/graph.html";
+    
     /**
-     * Generates a complete HTML page that visualizes the given Graph object.
-     * The HTML includes CSS styling and JavaScript for interactive visualization.
+     * Generates an HTML page by modifying the existing graph.html template with 
+     * dynamic graph data.
      * 
      * @param graph The Graph object to visualize
-     * @return A complete HTML string representing the graph visualization
+     * @return A complete HTML string with the graph data injected
      */
     public static String getGraphHTML(Graph graph) {
         if (graph == null) {
             return generateErrorHTML("Graph is null");
         }
         
-        StringBuilder html = new StringBuilder();
-        
-        // Generate the complete HTML structure
-        html.append(generateHTMLHeader());
-        html.append(generateBodyStart());
-        html.append(generateGraphContainer(graph));
-        html.append(generateJavaScript(graph));
-        html.append(generateHTMLFooter());
-        
-        return html.toString();
+        try {
+            // Try multiple possible paths for the template file
+            String templateHtml = null;
+            String[] possiblePaths = {
+                TEMPLATE_PATH,
+                "../" + TEMPLATE_PATH,
+                "../../" + TEMPLATE_PATH,
+                System.getProperty("user.dir") + "/" + TEMPLATE_PATH,
+                System.getProperty("user.dir") + "/../" + TEMPLATE_PATH
+            };
+            
+            for (String path : possiblePaths) {
+                try {
+                    templateHtml = new String(Files.readAllBytes(Paths.get(path)));
+                    break; // Success, stop trying other paths
+                } catch (IOException e) {
+                    // Try next path
+                    continue;
+                }
+            }
+            
+            if (templateHtml == null) {
+                return generateErrorHTML("Could not find graph template file. Working directory: " + System.getProperty("user.dir"));
+            }
+            
+            // Generate the dynamic graph data
+            String dynamicGraphFunction = generateDynamicGraphFunction(graph);
+            
+            // Replace the static example function with our dynamic one
+            String modifiedHtml = replaceGraphFunction(templateHtml, dynamicGraphFunction);
+            
+            // Update the title and statistics
+            modifiedHtml = updateGraphInfo(modifiedHtml, graph);
+            
+            // Update the initialization to use our dynamic function
+            modifiedHtml = updateInitialization(modifiedHtml);
+            
+            return modifiedHtml;
+            
+        } catch (Exception e) {
+            return generateErrorHTML("Error generating graph: " + e.getMessage());
+        }
     }
     
     /**
-     * Generates the HTML header with CSS styling.
+     * Generates the JavaScript function that creates the dynamic graph from the Graph object.
      */
-    private static String generateHTMLHeader() {
-        StringBuilder header = new StringBuilder();
+    private static String generateDynamicGraphFunction(Graph graph) {
+        StringBuilder function = new StringBuilder();
         
-        header.append("<!DOCTYPE html>\n");
-        header.append("<html lang=\"en\">\n");
-        header.append("<head>\n");
-        header.append("    <meta charset=\"UTF-8\">\n");
-        header.append("    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
-        header.append("    <title>System Graph Visualization</title>\n");
-        header.append("    <style>\n");
-        header.append(generateCSS());
-        header.append("    </style>\n");
-        header.append("</head>\n");
+        function.append("        // Generate system graph from configuration data\n");
+        function.append("        function generateSystemGraph() {\n");
+        function.append("            clearGraph();\n");
+        function.append("            \n");
         
-        return header.toString();
+        if (graph.isEmpty()) {
+            function.append("            // No nodes to display\n");
+            function.append("            const infoDiv = document.getElementById('graphInfo');\n");
+            function.append("            infoDiv.innerHTML = '<p>No graph data available. The graph is empty.</p>';\n");
+            function.append("            return;\n");
+        } else {
+            // Calculate node positions
+            Map<String, NodePosition> positions = calculateNodePositions(graph);
+            
+            // Create JavaScript nodes
+            function.append("            // Create nodes from system configuration\n");
+            for (Node node : graph) {
+                NodePosition pos = positions.get(node.getName());
+                String nodeType = node.getName().startsWith("T") ? "operator" : "input"; // Topics as operators, Agents as inputs
+                String escapedLabel = escapeJavaScript(node.getName());
+                
+                // Get topic value if this is a topic
+                String topicValue = "null";
+                if (node.getName().startsWith("T")) {
+                    try {
+                        Topic topic = TopicManagerSingleton.get().getTopic(node.getName());
+                        String value = topic.getResult();
+                        if (value != null && !value.isEmpty()) {
+                            topicValue = "'" + escapeJavaScript(value) + "'";
+                        } else {
+                            topicValue = "''"; // Empty string for empty topics
+                        }
+                    } catch (Exception e) {
+                        topicValue = "null"; // Default if topic not found
+                    }
+                }
+                
+                function.append("            const node").append(nodeId(node.getName())).append(" = new GraphNode('").append(escapedLabel).append("', '").append(nodeType).append("', ").append(pos.x).append(", ").append(pos.y).append(", ").append(topicValue).append(");\n");
+            }
+            
+            function.append("            \n");
+            function.append("            // Add nodes to array\n");
+            function.append("            nodes = [");
+            boolean first = true;
+            for (Node node : graph) {
+                if (!first) function.append(", ");
+                function.append("node").append(nodeId(node.getName()));
+                first = false;
+            }
+            function.append("];\n");
+            function.append("            \n");
+            function.append("            // Create node elements\n");
+            function.append("            nodes.forEach(node => createNodeElement(node));\n");
+            function.append("            \n");
+            function.append("            // Define edges\n");
+            function.append("            edges = [\n");
+            
+            boolean firstEdge = true;
+            for (Node fromNode : graph) {
+                for (Node toNode : fromNode.getEdges()) {
+                    if (!firstEdge) function.append(",\n");
+                    function.append("                new GraphEdge(node").append(nodeId(fromNode.getName())).append(", node").append(nodeId(toNode.getName())).append(")");
+                    firstEdge = false;
+                }
+            }
+            
+            function.append("\n            ];\n");
+            function.append("            \n");
+            function.append("            // Draw arrows\n");
+            function.append("            edges.forEach(edge => drawArrow(edge.from, edge.to));\n");
+            function.append("            \n");
+            function.append("            // Update info\n");
+            function.append("            updateGraphInfo(null, 'System Graph loaded from configuration.\\nShowing actual communication topology.');\n");
+        }
+        
+        function.append("        }\n");
+        
+        return function.toString();
     }
     
     /**
-     * Generates the CSS styling for the graph visualization.
+     * Replaces the generateExampleGraph function with our dynamic function.
      */
-    private static String generateCSS() {
-        StringBuilder css = new StringBuilder();
+    private static String replaceGraphFunction(String html, String newFunction) {
+        // Find the start and end of the generateExampleGraph function
+        String startPattern = "        // Generate example graph: (A + B) * (A - B)";
         
-        css.append("        body {\n");
-        css.append("            font-family: Arial, sans-serif;\n");
-        css.append("            margin: 0;\n");
-        css.append("            padding: 20px;\n");
-        css.append("            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);\n");
-        css.append("            overflow: auto;\n");
-        css.append("        }\n");
+        int startIndex = html.indexOf(startPattern);
+        if (startIndex == -1) {
+            // Fallback: look for the function declaration
+            startPattern = "        function generateExampleGraph() {";
+            startIndex = html.indexOf(startPattern);
+        }
         
-        css.append("        .graph-container {\n");
-        css.append("            background: white;\n");
-        css.append("            border-radius: 10px;\n");
-        css.append("            box-shadow: 0 4px 8px rgba(0,0,0,0.1);\n");
-        css.append("            padding: 20px;\n");
-        css.append("            min-height: calc(100vh - 80px);\n");
-        css.append("        }\n");
+        if (startIndex != -1) {
+            // Find the matching closing brace
+            int braceCount = 0;
+            int searchIndex = startIndex;
+            int endIndex = -1;
+            
+            // Skip to the opening brace
+            while (searchIndex < html.length() && html.charAt(searchIndex) != '{') {
+                searchIndex++;
+            }
+            
+            if (searchIndex < html.length()) {
+                braceCount = 1;
+                searchIndex++; // Move past the opening brace
+                
+                while (searchIndex < html.length() && braceCount > 0) {
+                    char c = html.charAt(searchIndex);
+                    if (c == '{') {
+                        braceCount++;
+                    } else if (c == '}') {
+                        braceCount--;
+                    }
+                    searchIndex++;
+                }
+                
+                if (braceCount == 0) {
+                    endIndex = searchIndex;
+                }
+            }
+            
+            if (endIndex != -1) {
+                return html.substring(0, startIndex) + newFunction + html.substring(endIndex);
+            }
+        }
         
-        css.append("        .graph-title {\n");
-        css.append("            text-align: center;\n");
-        css.append("            color: #333;\n");
-        css.append("            margin-bottom: 20px;\n");
-        css.append("            font-size: 24px;\n");
-        css.append("            font-weight: bold;\n");
-        css.append("        }\n");
+        // If we couldn't find the function, just append our function before the complex graph function
+        String insertPoint = "        // Generate a more complex example";
+        int insertIndex = html.indexOf(insertPoint);
+        if (insertIndex != -1) {
+            return html.substring(0, insertIndex) + newFunction + "\n        " + html.substring(insertIndex);
+        }
         
-        css.append("        .graph-canvas {\n");
-        css.append("            border: 2px solid #ddd;\n");
-        css.append("            border-radius: 8px;\n");
-        css.append("            background: #fafafa;\n");
-        css.append("            width: 100%;\n");
-        css.append("            height: 600px;\n");
-        css.append("            position: relative;\n");
-        css.append("            overflow: auto;\n");
-        css.append("        }\n");
+        // Last resort: append before the script closing tag
+        insertPoint = "    </script>";
+        insertIndex = html.lastIndexOf(insertPoint);
+        if (insertIndex != -1) {
+            return html.substring(0, insertIndex) + "        " + newFunction + "\n    " + html.substring(insertIndex);
+        }
         
-        css.append("        .node {\n");
-        css.append("            position: absolute;\n");
-        css.append("            background: #4CAF50;\n");
-        css.append("            color: white;\n");
-        css.append("            padding: 10px 15px;\n");
-        css.append("            border-radius: 8px;\n");
-        css.append("            box-shadow: 0 2px 4px rgba(0,0,0,0.2);\n");
-        css.append("            font-weight: bold;\n");
-        css.append("            font-size: 14px;\n");
-        css.append("            text-align: center;\n");
-        css.append("            cursor: pointer;\n");
-        css.append("            transition: all 0.3s ease;\n");
-        css.append("            border: 2px solid #45a049;\n");
-        css.append("        }\n");
-        
-        css.append("        .node:hover {\n");
-        css.append("            transform: scale(1.05);\n");
-        css.append("            box-shadow: 0 4px 8px rgba(0,0,0,0.3);\n");
-        css.append("        }\n");
-        
-        css.append("        .node.topic {\n");
-        css.append("            background: #FF6B6B;\n");
-        css.append("            border-color: #e55353;\n");
-        css.append("        }\n");
-        
-        css.append("        .node.agent {\n");
-        css.append("            background: #4ECDC4;\n");
-        css.append("            border-color: #3bb5ad;\n");
-        css.append("        }\n");
-        
-        css.append("        .arrow-line {\n");
-        css.append("            stroke: #666;\n");
-        css.append("            stroke-width: 2;\n");
-        css.append("            marker-end: url(#arrowhead);\n");
-        css.append("        }\n");
-        
-        css.append("        .info-panel {\n");
-        css.append("            background: #f8f9fa;\n");
-        css.append("            border: 1px solid #dee2e6;\n");
-        css.append("            border-radius: 5px;\n");
-        css.append("            padding: 15px;\n");
-        css.append("            margin-top: 20px;\n");
-        css.append("        }\n");
-        
-        css.append("        .back-button {\n");
-        css.append("            margin-top: 20px;\n");
-        css.append("            padding: 10px 20px;\n");
-        css.append("            background-color: #007bff;\n");
-        css.append("            color: white;\n");
-        css.append("            text-decoration: none;\n");
-        css.append("            border-radius: 4px;\n");
-        css.append("            display: inline-block;\n");
-        css.append("        }\n");
-        
-        css.append("        .back-button:hover {\n");
-        css.append("            background-color: #0056b3;\n");
-        css.append("        }\n");
-        
-        return css.toString();
+        return html; // Return unchanged if we can't find where to insert
     }
     
     /**
-     * Generates the opening body tag.
+     * Updates the graph title and node type legend.
      */
-    private static String generateBodyStart() {
-        return "<body>\n";
-    }
-    
-    /**
-     * Generates the main graph container with dynamic content based on the Graph object.
-     */
-    private static String generateGraphContainer(Graph graph) {
-        StringBuilder container = new StringBuilder();
-        
-        container.append("    <div class=\"graph-container\">\n");
-        container.append("        <div class=\"graph-title\">🔗 System Communication Graph</div>\n");
-        container.append("        \n");
-        container.append("        <div class=\"graph-canvas\" id=\"graphCanvas\">\n");
-        container.append("            <svg width=\"100%\" height=\"100%\" style=\"position: absolute; top: 0; left: 0;\">\n");
-        container.append("                <defs>\n");
-        container.append("                    <marker id=\"arrowhead\" markerWidth=\"10\" markerHeight=\"7\" \n");
-        container.append("                            refX=\"9\" refY=\"3.5\" orient=\"auto\">\n");
-        container.append("                        <polygon points=\"0 0, 10 3.5, 0 7\" fill=\"#666\" />\n");
-        container.append("                    </marker>\n");
-        container.append("                </defs>\n");
-        container.append("            </svg>\n");
-        container.append("        </div>\n");
-        container.append("        \n");
-        container.append("        <div class=\"info-panel\">\n");
-        container.append("            <h4>📋 Graph Information</h4>\n");
-        container.append("            <div id=\"graphInfo\">\n");
-        container.append("                <p><strong>Graph Statistics:</strong></p>\n");
-        container.append("                <p>Total Nodes: ").append(graph.size()).append("</p>\n");
+    private static String updateGraphInfo(String html, Graph graph) {
+        // Update the title
+        html = html.replace("🔗 Computation Graph Visualization", "🔗 System Communication Graph");
         
         // Count different node types
         int topicCount = 0;
         int agentCount = 0;
-        int totalEdges = 0;
         
         for (Node node : graph) {
-            totalEdges += node.getEdges().size();
             if (node.getName().startsWith("T")) {
                 topicCount++;
             } else if (node.getName().startsWith("A")) {
@@ -204,186 +247,32 @@ public class HtmlGraphWriter {
             }
         }
         
-        container.append("                <p>Topics: ").append(topicCount).append("</p>\n");
-        container.append("                <p>Agents: ").append(agentCount).append("</p>\n");
-        container.append("                <p>Total Edges: ").append(totalEdges).append("</p>\n");
-        container.append("                <p><strong>Node Types:</strong></p>\n");
-        container.append("                <ul>\n");
-        container.append("                    <li><span style=\"color: #FF6B6B; font-weight: bold;\">■</span> Topics (T prefix)</li>\n");
-        container.append("                    <li><span style=\"color: #4ECDC4; font-weight: bold;\">■</span> Agents (A prefix)</li>\n");
-        container.append("                </ul>\n");
-        container.append("                <p>Click on a node to see its details.</p>\n");
-        container.append("            </div>\n");
-        container.append("        </div>\n");
-        container.append("        \n");
-        container.append("        <a href=\"/form.html\" class=\"back-button\">← Back to Forms</a>\n");
-        container.append("    </div>\n");
+        // Update the legend
+        String oldLegend = "                    <li><span style=\"color: #4ECDC4; font-weight: bold;\">■</span> Input Variables (A, B, C, etc.)</li>\n" +
+                          "                    <li><span style=\"color: #FF6B6B; font-weight: bold;\">■</span> Operators (+, -, *, /, etc.)</li>\n" +
+                          "                    <li><span style=\"color: #45B7D1; font-weight: bold;\">■</span> Output Results</li>\n" +
+                          "                    <li><span style=\"color: #4CAF50; font-weight: bold;\">■</span> Intermediate Results</li>";
         
-        return container.toString();
+        String newLegend = "                    <li><span style=\"color: #4ECDC4; font-weight: bold;\">■</span> Agents (" + agentCount + " total)</li>\n" +
+                          "                    <li><span style=\"color: #FF6B6B; font-weight: bold;\">■</span> Topics (" + topicCount + " total)</li>\n" +
+                          "                    <li><span style=\"color: #45B7D1; font-weight: bold;\">■</span> Communication Flow</li>\n" +
+                          "                    <li><span style=\"color: #4CAF50; font-weight: bold;\">■</span> Total Nodes: " + graph.size() + "</li>";
+        
+        return html.replace(oldLegend, newLegend);
     }
     
     /**
-     * Generates JavaScript code for interactive graph visualization.
+     * Updates the initialization to call our dynamic function instead of the example.
      */
-    private static String generateJavaScript(Graph graph) {
-        StringBuilder js = new StringBuilder();
+    private static String updateInitialization(String html) {
+        // Replace the initialization to call our function
+        html = html.replace("generateExampleGraph();", "generateSystemGraph();");
+        html = html.replace("loadLiveGraphData();", "generateSystemGraph();");
         
-        js.append("    <script>\n");
-        js.append("        // Graph data from server\n");
-        js.append("        let nodes = [];\n");
-        js.append("        let edges = [];\n");
-        js.append("        let nodeId = 0;\n");
-        js.append("        \n");
-        js.append("        // Node class\n");
-        js.append("        class GraphNode {\n");
-        js.append("            constructor(label, type, x, y) {\n");
-        js.append("                this.id = ++nodeId;\n");
-        js.append("                this.label = label;\n");
-        js.append("                this.type = type;\n");
-        js.append("                this.x = x;\n");
-        js.append("                this.y = y;\n");
-        js.append("                this.element = null;\n");
-        js.append("            }\n");
-        js.append("        }\n");
-        js.append("        \n");
-        js.append("        // Edge class\n");
-        js.append("        class GraphEdge {\n");
-        js.append("            constructor(fromNode, toNode) {\n");
-        js.append("                this.from = fromNode;\n");
-        js.append("                this.to = toNode;\n");
-        js.append("            }\n");
-        js.append("        }\n");
-        js.append("        \n");
-        
-        // Generate node positioning and creation logic
-        js.append(generateNodeCreationJS(graph));
-        
-        js.append("        \n");
-        js.append("        // Create a node in the DOM\n");
-        js.append("        function createNodeElement(node) {\n");
-        js.append("            const canvas = document.getElementById('graphCanvas');\n");
-        js.append("            const nodeElement = document.createElement('div');\n");
-        js.append("            nodeElement.className = `node ${node.type}`;\n");
-        js.append("            nodeElement.textContent = node.label;\n");
-        js.append("            nodeElement.style.left = `${node.x}px`;\n");
-        js.append("            nodeElement.style.top = `${node.y}px`;\n");
-        js.append("            nodeElement.title = `${node.type}: ${node.label}`;\n");
-        js.append("            \n");
-        js.append("            nodeElement.addEventListener('click', () => {\n");
-        js.append("                updateGraphInfo(node);\n");
-        js.append("            });\n");
-        js.append("            \n");
-        js.append("            canvas.appendChild(nodeElement);\n");
-        js.append("            node.element = nodeElement;\n");
-        js.append("            return nodeElement;\n");
-        js.append("        }\n");
-        js.append("        \n");
-        js.append("        // Draw an arrow between two nodes\n");
-        js.append("        function drawArrow(fromNode, toNode) {\n");
-        js.append("            const svg = document.querySelector('#graphCanvas svg');\n");
-        js.append("            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');\n");
-        js.append("            \n");
-        js.append("            const fromX = fromNode.x + 40;\n");
-        js.append("            const fromY = fromNode.y + 20;\n");
-        js.append("            const toX = toNode.x + 40;\n");
-        js.append("            const toY = toNode.y + 20;\n");
-        js.append("            \n");
-        js.append("            line.setAttribute('x1', fromX);\n");
-        js.append("            line.setAttribute('y1', fromY);\n");
-        js.append("            line.setAttribute('x2', toX);\n");
-        js.append("            line.setAttribute('y2', toY);\n");
-        js.append("            line.setAttribute('class', 'arrow-line');\n");
-        js.append("            \n");
-        js.append("            svg.appendChild(line);\n");
-        js.append("        }\n");
-        js.append("        \n");
-        js.append("        // Update graph information panel\n");
-        js.append("        function updateGraphInfo(selectedNode) {\n");
-        js.append("            const infoDiv = document.getElementById('graphInfo');\n");
-        js.append("            \n");
-        js.append("            if (selectedNode) {\n");
-        js.append("                infoDiv.innerHTML = `\n");
-        js.append("                    <p><strong>Selected Node:</strong> ${selectedNode.label}</p>\n");
-        js.append("                    <p><strong>Type:</strong> ${selectedNode.type}</p>\n");
-        js.append("                    <p><strong>Position:</strong> (${selectedNode.x}, ${selectedNode.y})</p>\n");
-        js.append("                    <p><strong>ID:</strong> ${selectedNode.id}</p>\n");
-        js.append("                `;\n");
-        js.append("            }\n");
-        js.append("        }\n");
-        js.append("        \n");
-        js.append("        // Initialize the graph when page loads\n");
-        js.append("        window.addEventListener('load', () => {\n");
-        js.append("            generateGraph();\n");
-        js.append("        });\n");
-        js.append("    </script>\n");
-        
-        return js.toString();
+        return html;
     }
     
-    /**
-     * Generates JavaScript code for creating nodes and edges from the Graph object.
-     */
-    private static String generateNodeCreationJS(Graph graph) {
-        StringBuilder js = new StringBuilder();
-        
-        js.append("        // Generate graph from server data\n");
-        js.append("        function generateGraph() {\n");
-        
-        if (graph.isEmpty()) {
-            js.append("            // No nodes to display\n");
-            js.append("            const infoDiv = document.getElementById('graphInfo');\n");
-            js.append("            infoDiv.innerHTML = '<p>No graph data available. The graph is empty.</p>';\n");
-            js.append("            return;\n");
-        } else {
-            // Calculate node positions using a simple layout algorithm
-            Map<String, NodePosition> positions = calculateNodePositions(graph);
-            
-            // Create JavaScript nodes
-            js.append("            // Create nodes\n");
-            for (Node node : graph) {
-                NodePosition pos = positions.get(node.getName());
-                String nodeType = node.getName().startsWith("T") ? "topic" : "agent";
-                String escapedLabel = escapeJavaScript(node.getName());
-                
-                js.append("            const node").append(nodeId(node.getName())).append(" = new GraphNode('").append(escapedLabel).append("', '").append(nodeType).append("', ").append(pos.x).append(", ").append(pos.y).append(");\n");
-            }
-            
-            js.append("            \n");
-            js.append("            // Add nodes to array\n");
-            js.append("            nodes = [");
-            boolean first = true;
-            for (Node node : graph) {
-                if (!first) js.append(", ");
-                js.append("node").append(nodeId(node.getName()));
-                first = false;
-            }
-            js.append("];\n");
-            js.append("            \n");
-            js.append("            // Create node elements\n");
-            js.append("            nodes.forEach(node => createNodeElement(node));\n");
-            js.append("            \n");
-            js.append("            // Define edges\n");
-            js.append("            edges = [\n");
-            
-            boolean firstEdge = true;
-            for (Node fromNode : graph) {
-                for (Node toNode : fromNode.getEdges()) {
-                    if (!firstEdge) js.append(",\n");
-                    js.append("                new GraphEdge(node").append(nodeId(fromNode.getName())).append(", node").append(nodeId(toNode.getName())).append(")");
-                    firstEdge = false;
-                }
-            }
-            
-            js.append("\n            ];\n");
-            js.append("            \n");
-            js.append("            // Draw arrows\n");
-            js.append("            edges.forEach(edge => drawArrow(edge.from, edge.to));\n");
-        }
-        
-        js.append("        }\n");
-        
-        return js.toString();
-    }
+    // ... existing helper methods (calculateNodePositions, NodePosition, escapeJavaScript, etc.) ...
     
     /**
      * Simple class to hold node position coordinates.
@@ -550,13 +439,6 @@ public class HtmlGraphWriter {
                    .replace("\n", "\\n")
                    .replace("\r", "\\r")
                    .replace("\t", "\\t");
-    }
-    
-    /**
-     * Generates the closing HTML tags.
-     */
-    private static String generateHTMLFooter() {
-        return "</body>\n</html>";
     }
     
     /**
