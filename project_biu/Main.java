@@ -9,7 +9,7 @@ public class Main {
         server.addServlet("GET", "/publish", new TopicDisplayer());
         server.addServlet("POST", "/upload", new ConfLoader());
         // Use relative path from project_biu directory to html_files
-        server.addServlet("GET", "/app/", new HtmlLoader("../html_files"));
+        server.addServlet("GET", "/app/", new HtmlLoader("./html_files"));
 
         server.start();
         System.out.println("Server started on port 8080");
