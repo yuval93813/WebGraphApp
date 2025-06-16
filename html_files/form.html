@@ -176,15 +176,16 @@
                     const result = await response.text();
                     showStatus(statusDiv, 'Configuration deployed successfully!', 'success');
                     
-                    // Tell parent frame to show graph
-                    window.parent.postMessage({action: 'showGraph'}, '*');
-                    
-                    // Send result to center panel
+                    // Send the actual graph HTML result to center panel
                     const centerFrame = window.parent.document.getElementById('centerFrame');
                     if (centerFrame) {
-                        // Update center frame to show graph with live data
-                        centerFrame.src = 'graph.html?live=true';
+                        // Write the dynamic graph HTML directly to the iframe
+                        centerFrame.contentDocument.open();
+                        centerFrame.contentDocument.write(result);
+                        centerFrame.contentDocument.close();
                     }
+                    
+                    // Note: We don't send 'showGraph' message to avoid overriding the dynamic content
                 } else {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
