@@ -125,6 +125,9 @@
             </div>
             <button type="submit" id="publishBtn">Send Message</button>
             <div id="publishStatus" class="status-message"></div>
+            <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                💡 Topic status is displayed in the "System Status" panel on the right
+            </div>
         </form>
         
         <!-- Results Table -->
@@ -227,6 +230,9 @@
                     // Add result to table
                     addResultToTable(topic, message, 'Success');
                     
+                    // Update the graph with the actual topic data
+                    updateGraphWithTopicData(result);
+                    
                     // Clear form
                     document.getElementById('topic').value = '';
                     document.getElementById('message').value = '';
@@ -283,6 +289,47 @@
                 statusCell.style.fontWeight = 'bold';
             }
         }
+
+        // Helper function to update the right panel with topic data
+        function updateGraphWithTopicData(htmlResponse) {
+            try {
+                // Send the updated topic data to the parent frame's right panel (System Status)
+                window.parent.postMessage({
+                    action: 'showTopicDataInRightPanel',
+                    content: htmlResponse
+                }, '*');
+                
+                // Also trigger a graph update in the center panel to show real-time changes
+                updateCenterGraphWithRealTimeData();
+                
+                console.log('Topic data sent to right panel (System Status) and graph updated');
+            } catch (error) {
+                console.error('Error updating right panel with topic data:', error);
+            }
+        }
+
+        // Helper function to update the center panel with real-time graph
+        function updateCenterGraphWithRealTimeData() {
+            try {
+                // Fetch updated graph with current topic values
+                fetch('/graph')
+                    .then(response => response.text())
+                    .then(graphHtml => {
+                        // Send the updated graph to the parent frame's center panel
+                        window.parent.postMessage({
+                            action: 'showGeneratedGraph',
+                            content: graphHtml
+                        }, '*');
+                        console.log('Real-time graph update sent to center panel');
+                    })
+                    .catch(error => {
+                        console.error('Error fetching updated graph:', error);
+                    });
+            } catch (error) {
+                console.error('Error updating center panel with real-time graph:', error);
+            }
+        }
+
     </script>
 </body>
 </html>

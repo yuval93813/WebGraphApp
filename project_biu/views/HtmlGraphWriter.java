@@ -2,6 +2,7 @@ package views;
 
 import graph.Graph;
 import graph.Node;
+import graph.Message;
 import java.util.*;
 
 public class HtmlGraphWriter {
@@ -65,7 +66,15 @@ public class HtmlGraphWriter {
             // Get message/value for the node
             Object msg = null;
             try { msg = node.getMsg(); } catch (Exception e) {}
-            String msgText = (msg != null) ? msg.toString() : "unknown";
+            String msgText = "unknown";
+            if (msg != null) {
+                if (msg instanceof Message) {
+                    // Extract the actual text from the Message object
+                    msgText = ((Message) msg).asText;
+                } else {
+                    msgText = msg.toString();
+                }
+            }
             
             if (isTopic) {
                 // Topics as rectangles

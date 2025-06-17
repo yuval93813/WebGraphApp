@@ -94,6 +94,24 @@
             centerFrame.contentDocument.close();
         }
         
+        // Function to update center panel with topic data
+        function showTopicData(content) {
+            const centerFrame = document.getElementById('centerFrame');
+            // Write the topic data HTML content directly to the iframe
+            centerFrame.contentDocument.open();
+            centerFrame.contentDocument.write(content);
+            centerFrame.contentDocument.close();
+        }
+        
+        // Function to update right panel with topic data
+        function showTopicDataInRightPanel(content) {
+            const rightFrame = document.getElementById('rightFrame');
+            // Write the topic data HTML content directly to the iframe
+            rightFrame.contentDocument.open();
+            rightFrame.contentDocument.write(content);
+            rightFrame.contentDocument.close();
+        }
+        
         // Function to update center panel with static graph
         function showGraph() {
             document.getElementById('centerFrame').src = 'graph.html';
@@ -108,6 +126,10 @@
         window.addEventListener('message', function(event) {
             if (event.data.action === 'showGeneratedGraph') {
                 showGeneratedGraph(event.data.content);
+            } else if (event.data.action === 'showTopicData') {
+                showTopicData(event.data.content);
+            } else if (event.data.action === 'showTopicDataInRightPanel') {
+                showTopicDataInRightPanel(event.data.content);
             } else if (event.data.action === 'showGraph') {
                 showGraph();
             } else if (event.data.action === 'resetCenter') {

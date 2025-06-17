@@ -294,3 +294,192 @@ Exception in thread "main" java.io.IOException: Input/output error
 	at java.base/java.io.BufferedInputStream.implRead(BufferedInputStream.java:325)
 	at java.base/java.io.BufferedInputStream.read(BufferedInputStream.java:312)
 	at Main.main(Main.java:18)
+[DEBUG] Request line: GET /app/index.html HTTP/1.1
+[DEBUG] Request line: GET /app/form.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Raw content length: 82
+[DEBUG] Content preview: graph.PlusAgent
+input_a,input_b
+sum_output
+graph.IncAgent
+sum_output
+final_result
+
+[DEBUG] Processing as plain content
+[DEBUG] Cleared previous topics
+[DEBUG] About to create config from file: /var/folders/f5/gsx5dxy538z0xyk3rpdwmjqr0000gn/T/conf_upload_13931734414002132204.conf
+[DEBUG] Config created successfully
+[DEBUG] Graph created with 6 nodes
+[DEBUG] Topics in TopicManager: 4
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /publish HTTP/1.1
+[DEBUG] Request line: GET /app/index.html HTTP/1.1
+[DEBUG] Request line: GET /app/form.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Raw content length: 162
+[DEBUG] Content preview: ------WebKitFormBoundaryMFrvgaAULCm3ddNa
+Content-Disposition: form-data; name="configFile"; filename="working_config.conf"
+Content-Type: application/octet-stream
+
+[DEBUG] Processing as plain content
+[DEBUG] Cleared previous topics
+[DEBUG] About to create config from file: /var/folders/f5/gsx5dxy538z0xyk3rpdwmjqr0000gn/T/conf_upload_6920456344188239796.conf
+java.lang.RuntimeException: Failed to create agent: ------WebKitFormBoundaryMFrvgaAULCm3ddNa
+	at configs.GenericConfig.create(GenericConfig.java:82)
+	at servlets.ConfLoader.handle(ConfLoader.java:95)
+	at server.MyHTTPServer.handleRequest(MyHTTPServer.java:172)
+	at server.MyHTTPServer.lambda$run$0(MyHTTPServer.java:88)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.lang.ClassNotFoundException: ------WebKitFormBoundaryMFrvgaAULCm3ddNa
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:421)
+	at java.base/java.lang.Class.forName(Class.java:412)
+	at configs.GenericConfig.create(GenericConfig.java:73)
+	... 6 more
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Raw content length: 82
+[DEBUG] Content preview: graph.PlusAgent
+input_a,input_b
+sum_output
+graph.IncAgent
+sum_output
+final_result
+
+[DEBUG] Processing as plain content
+[DEBUG] Cleared previous topics
+[DEBUG] About to create config from file: /var/folders/f5/gsx5dxy538z0xyk3rpdwmjqr0000gn/T/conf_upload_6885155614008610865.conf
+[DEBUG] Config created successfully
+[DEBUG] Graph created with 6 nodes
+[DEBUG] Topics in TopicManager: 4
+[DEBUG] Request line: GET /publish?topic=input_a&message=5 HTTP/1.1
+[DEBUG] Request line: GET /app/index.html HTTP/1.1
+[DEBUG] Request line: GET /app/form.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Raw content length: 162
+[DEBUG] Content preview: ------WebKitFormBoundaryIpx77h4JdoubLiJx
+Content-Disposition: form-data; name="configFile"; filename="working_config.conf"
+Content-Type: application/octet-stream
+
+[DEBUG] Processing as plain content
+[DEBUG] Cleared previous topics
+[DEBUG] About to create config from file: /var/folders/f5/gsx5dxy538z0xyk3rpdwmjqr0000gn/T/conf_upload_17900092105988733547.conf
+java.lang.RuntimeException: Failed to create agent: ------WebKitFormBoundaryIpx77h4JdoubLiJx
+	at configs.GenericConfig.create(GenericConfig.java:82)
+	at servlets.ConfLoader.handle(ConfLoader.java:95)
+	at server.MyHTTPServer.handleRequest(MyHTTPServer.java:172)
+	at server.MyHTTPServer.lambda$run$0(MyHTTPServer.java:88)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.lang.ClassNotFoundException: ------WebKitFormBoundaryIpx77h4JdoubLiJx
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:421)
+	at java.base/java.lang.Class.forName(Class.java:412)
+	at configs.GenericConfig.create(GenericConfig.java:73)
+	... 6 more
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Raw content length: 82
+[DEBUG] Content preview: graph.PlusAgent
+input_a,input_b
+sum_output
+graph.IncAgent
+sum_output
+final_result
+
+[DEBUG] Processing as plain content
+[DEBUG] Cleared previous topics
+[DEBUG] About to create config from file: /var/folders/f5/gsx5dxy538z0xyk3rpdwmjqr0000gn/T/conf_upload_16553440610824628725.conf
+[DEBUG] Config created successfully
+[DEBUG] Graph created with 6 nodes
+[DEBUG] Topics in TopicManager: 4
+[DEBUG] Request line: GET /publish?topic=input_a&message=5 HTTP/1.1
+[DEBUG] Request line: GET /graph HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: GET /graph HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: GET /app/index.html HTTP/1.1
+[DEBUG] Request line: GET /app/form.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Raw content length: 82
+[DEBUG] Content preview: graph.PlusAgent
+input_a,input_b
+sum_output
+graph.IncAgent
+sum_output
+final_result
+
+[DEBUG] Processing as plain content
+[DEBUG] Cleared previous topics
+[DEBUG] About to create config from file: /var/folders/f5/gsx5dxy538z0xyk3rpdwmjqr0000gn/T/conf_upload_9862525696961300222.conf
+[DEBUG] Config created successfully
+[DEBUG] Graph created with 6 nodes
+[DEBUG] Topics in TopicManager: 4
+[DEBUG] Request line: GET /publish?topic=input_a&message=5 HTTP/1.1
+[DEBUG] Request line: GET /graph HTTP/1.1
+[DEBUG] Request line: GET /publish?topic=input_b&message=5 HTTP/1.1
+[DEBUG] Request line: GET /graph HTTP/1.1
+[DEBUG] Request line: GET /publish?topic=sum_output&message=333 HTTP/1.1
+[DEBUG] Request line: GET /graph HTTP/1.1
