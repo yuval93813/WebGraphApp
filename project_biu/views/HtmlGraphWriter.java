@@ -25,41 +25,31 @@ public class HtmlGraphWriter {
             return svg;
         }
         
-        // Center the graph in a LARGER viewBox and spread elements across it
-        int canvasWidth = 800;   // Full width of viewBox
-        int canvasHeight = 600;   // Full height of viewBox
-        Map<Node, Integer[]> nodePos = new HashMap<>();
-        Map<Node, Integer> nodeRadii = new HashMap<>();
-
-        // First pass: FIXED agent radius
-        int maxAgentRadius = 40; // FIXED SIZE - changed from 35 to 40
-
-        // Second pass: SPREAD ELEMENTS ACROSS FULL CANVAS using grid layout
+        // Second pass: INCREASED NODE SPACING using expanded grid layout
         List<Node> nodeList = new ArrayList<>();
         for (Node node : g) {
             nodeList.add(node);
         }
 
-        // Calculate grid dimensions to spread nodes across full canvas
+        // INCREASED SPACING - make nodes further apart
         int cols = (int) Math.ceil(Math.sqrt(n));
         int rows = (int) Math.ceil((double) n / cols);
 
-        // Calculate spacing to use full canvas
-        int horizontalSpacing = (canvasWidth - 200) / Math.max(1, cols - 1); // 200px margin (100px each side)
-        int verticalSpacing = (canvasHeight - 200) / Math.max(1, rows - 1);   // 200px margin (100px each side)
+        // EXPANDED SPACING - increased from previous values
+        int minSpacing = 150;  // Increased from 80 to 150
+        int horizontalSpacing = Math.max(minSpacing, 180); // More horizontal space
+        int verticalSpacing = Math.max(minSpacing, 160);   // More vertical space
 
-        // Starting positions (with margins)
-        int startX = 100; // Left margin
-        int startY = 100; // Top margin
+        // LARGER CANVAS with more spacing
+        int canvasWidth = Math.max(800, cols * horizontalSpacing + 200);
+        int canvasHeight = Math.max(600, rows * verticalSpacing + 200);
 
-        // If only one row/col, center the elements
-        if (cols == 1) {
-            startX = canvasWidth / 2;
-        }
-        if (rows == 1) {
-            startY = canvasHeight / 2;
-        }
+        // Starting positions with larger margins
+        int startX = 100;  // Increased margin
+        int startY = 50;  // Increased margin
 
+        // Position nodes in expanded grid
+        Map<Node, Integer[]> nodePos = new HashMap<>();
         for (int i = 0; i < n; i++) {
             Node node = nodeList.get(i);
             
@@ -67,23 +57,19 @@ public class HtmlGraphWriter {
             int row = i / cols;
             int col = i % cols;
             
-            // Calculate actual pixel position
-            int x, y;
-            
-            if (cols == 1) {
-                x = startX; // Center horizontally if single column
-            } else {
-                x = startX + col * horizontalSpacing;
-            }
-            
-            if (rows == 1) {
-                y = startY; // Center vertically if single row
-            } else {
-                y = startY + row * verticalSpacing;
-            }
+            // Calculate actual pixel position - MORE SPREAD OUT
+            int x = startX + col * horizontalSpacing;
+            int y = startY + row * verticalSpacing;
             
             nodePos.put(node, new Integer[]{x, y});
-            
+        }
+
+        Map<Node, Integer> nodeRadii = new HashMap<>();
+
+        // First pass: FIXED agent radius
+        int maxAgentRadius = 40; // FIXED SIZE - changed from 35 to 40
+
+        for (Node node : g) {
             // Assign node radius (keep existing logic)
             String nodeName = node.getName();
             String displayName = nodeName;
@@ -116,45 +102,45 @@ public class HtmlGraphWriter {
                         dx /= length;
                         dy /= length;
                         
-                        // Add extra space for arrow marker (arrow extends ~12px from line end)
-                        int arrowSpace = 12;
+                        // REDUCED arrow space for shorter arrows
+                        int arrowSpace = 5; // Changed from 12 to 5
                         
                         // Calculate connection points based on node types (circle vs rectangle)
                         int fromX, fromY, toX, toY;
                         
                         // From node connection point
                         if (node.getName().startsWith("T")) {
-                            // Topic (rectangle) - calculate intersection with rectangle edge
+                            // Topic (rectangle) - REDUCED spacing
                             int fromNodeRadius = nodeRadii.get(node);
                             int rectWidth = Math.max(fromNodeRadius * 2, node.getName().substring(1).length() * 10 + 20);
-                            int rectHeight = 40;
+                            int rectHeight = 60; // Use consistent height
                             
-                            // Find intersection with rectangle edge
-                            double intersectDist = Math.min(Math.abs((rectWidth/2.0) / dx), Math.abs((rectHeight/2.0) / dy));
-                            fromX = (int)(from[0] + dx * intersectDist);
-                            fromY = (int)(from[1] + dy * intersectDist);
+                            // Find intersection with rectangle edge - CLOSER to edge
+                            double intersectDist = Math.min(Math.abs((rectWidth/2.0) / Math.abs(dx)), Math.abs((rectHeight/2.0) / Math.abs(dy)));
+                            fromX = (int)(from[0] + dx * (intersectDist + 2)); // Added small buffer of 2px
+                            fromY = (int)(from[1] + dy * (intersectDist + 2));
                         } else {
-                            // Agent (circle)
-                            int fromRadius = nodeRadii.get(node);
+                            // Agent (circle) - CLOSER to edge
+                            int fromRadius = 38; // Slightly less than 40 to get closer to edge
                             fromX = (int)(from[0] + dx * fromRadius);
                             fromY = (int)(from[1] + dy * fromRadius);
                         }
                         
                         // To node connection point
                         if (out.getName().startsWith("T")) {
-                            // Topic (rectangle) - calculate intersection with rectangle edge plus arrow space
+                            // Topic (rectangle) - SHORTER arrow
                             int toNodeRadius = nodeRadii.get(out);
                             int rectWidth = Math.max(toNodeRadius * 2, out.getName().substring(1).length() * 10 + 20);
-                            int rectHeight = 40;
+                            int rectHeight = 60;
                             
-                            // Find intersection with rectangle edge and add arrow space
+                            // Find intersection with rectangle edge - CLOSER approach
                             double intersectDist = Math.min(Math.abs((rectWidth/2.0) / Math.abs(dx)), Math.abs((rectHeight/2.0) / Math.abs(dy)));
-                            toX = (int)(to[0] - dx * (intersectDist + arrowSpace));
+                            toX = (int)(to[0] - dx * (intersectDist + arrowSpace)); // Uses reduced arrowSpace
                             toY = (int)(to[1] - dy * (intersectDist + arrowSpace));
                         } else {
-                            // Agent (circle)
-                            int toRadius = nodeRadii.get(out);
-                            toX = (int)(to[0] - dx * (toRadius + arrowSpace));
+                            // Agent (circle) - SHORTER arrow
+                            int toRadius = 38; // Slightly less than 40
+                            toX = (int)(to[0] - dx * (toRadius + arrowSpace)); // Uses reduced arrowSpace
                             toY = (int)(to[1] - dy * (toRadius + arrowSpace));
                         }
                         
