@@ -124,14 +124,15 @@
                 <textarea id="message" name="message" rows="3" placeholder="Enter your message" required></textarea>
             </div>
             <button type="submit" id="publishBtn">Send Message</button>
-            <button type="button" id="refreshGraphBtn" onclick="manualGraphRefresh()" style="margin-left: 10px; background-color: #17a2b8;">🔄 Refresh Graph</button>
             <div id="publishStatus" class="status-message"></div>
-            <div id="graphUpdateStatus" class="status-message" style="background-color: #e7f3ff; color: #0066cc; display: none;">🔄 Updating graph visualization...</div>
+            <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                💡 Topic status is displayed in the "System Status" panel on the right
+            </div>
         </form>
         
         <!-- Results Table -->
         <div id="resultsContainer" style="display: none;">
-            <h4>📊 Message Results:</h4>
+            <h4>📊 Messages History:</h4>
             <table class="results-table" id="resultsTable">
                 <thead>
                     <tr>
@@ -156,6 +157,11 @@
             const statusDiv = document.getElementById('uploadStatus');
             const fileInput = document.getElementById('configFile');
             
+            // Prevent multiple rapid submissions
+            if (deployBtn.disabled) {
+                return;
+            }
+            
             if (!fileInput.files[0]) {
                 showStatus(statusDiv, 'Please select a file to upload.', 'error');
                 return;
@@ -178,16 +184,17 @@
                     const result = await response.text();
                     showStatus(statusDiv, 'Configuration deployed successfully!', 'success');
                     
-                    // Send the actual graph HTML result to center panel
-                    const centerFrame = window.parent.document.getElementById('centerFrame');
-                    if (centerFrame) {
-                        // Write the dynamic graph HTML directly to the iframe
-                        centerFrame.contentDocument.open();
-                        centerFrame.contentDocument.write(result);
-                        centerFrame.contentDocument.close();
-                    }
+                    // Clear message history when new configuration is uploaded
+                    clearMessageHistory();
                     
-                    // Note: We don't send 'showGraph' message to avoid overriding the dynamic content
+                    // Send the generated graph HTML to the parent frame's center panel
+                    window.parent.postMessage({
+                        action: 'showGeneratedGraph',
+                        content: result
+                    }, '*');
+                    
+                    // Also fetch and display the System Status after configuration upload
+                    fetchAndUpdateSystemStatus();
                 } else {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
@@ -195,9 +202,11 @@
                 showStatus(statusDiv, `Upload failed: ${error.message}`, 'error');
                 console.error('Upload error:', error);
             } finally {
-                // Re-enable button
-                deployBtn.disabled = false;
-                deployBtn.textContent = 'Deploy';
+                // Re-enable button after a short delay to prevent rapid requests
+                setTimeout(() => {
+                    deployBtn.disabled = false;
+                    deployBtn.textContent = 'Deploy';
+                }, 1000);
             }
         });
 
@@ -222,17 +231,31 @@
                 
                 if (response.ok) {
                     const result = await response.text();
-                    showStatus(statusDiv, 'Message sent successfully!', 'success');
                     
-                    // Add result to table
-                    addResultToTable(topic, message, 'Success');
+                    // Check if the response contains an error message or success message
+                    const isError = result.includes('❌ Error:');
+                    const isSuccess = result.includes('✅ Success:');
                     
-                    // Update graph if it's currently displayed
-                    await updateGraphVisualization();
+                    if (isError) {
+                        // Extract error message from the response
+                        const errorMatch = result.match(/❌ Error:<\/strong>\s*([^<]+)/);
+                        const errorText = errorMatch ? errorMatch[1].trim() : 'Unknown error occurred';
+                        showStatus(statusDiv, `Error: ${errorText}`, 'error');
+                        addResultToTable(topic, message, 'Error');
+                    } else if (isSuccess) {
+                        showStatus(statusDiv, 'Message sent successfully!', 'success');
+                        addResultToTable(topic, message, 'Success');
+                        // Clear form on success
+                        document.getElementById('topic').value = '';
+                        document.getElementById('message').value = '';
+                    } else {
+                        // Fallback case
+                        showStatus(statusDiv, 'Message processed', 'success');
+                        addResultToTable(topic, message, 'Processed');
+                    }
                     
-                    // Clear form
-                    document.getElementById('topic').value = '';
-                    document.getElementById('message').value = '';
+                    // Update the graph with the actual topic data (always do this)
+                    updateGraphWithTopicData(result);
                 } else {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
@@ -281,53 +304,99 @@
             if (status === 'Success') {
                 statusCell.style.color = 'green';
                 statusCell.style.fontWeight = 'bold';
+            } else if (status === 'Error') {
+                statusCell.style.color = 'red';
+                statusCell.style.fontWeight = 'bold';
+            } else if (status === 'Processed') {
+                statusCell.style.color = 'blue';
+                statusCell.style.fontWeight = 'bold';
             } else {
                 statusCell.style.color = 'red';
                 statusCell.style.fontWeight = 'bold';
             }
         }
 
-        // Helper function to update graph visualization after topic changes
-        async function updateGraphVisualization() {
+        // Helper function to fetch and update System Status panel
+        function fetchAndUpdateSystemStatus() {
             try {
-                // Check if there's a graph iframe displaying a graph visualization
-                const iframe = document.getElementById('graphFrame');
-                if (iframe && iframe.src && iframe.src.includes('/upload')) {
-                    // Regenerate the graph by re-uploading the configuration
-                    // This will fetch the latest topic values from TopicManagerSingleton
-                    
-                    // Get the last uploaded file if available
-                    const fileInput = document.getElementById('configFile');
-                    if (fileInput && fileInput.files && fileInput.files[0]) {
-                        console.log('Updating graph visualization with latest topic values...');
-                        
-                        // Create a new form data with the same file
-                        const formData = new FormData();
-                        formData.append('file', fileInput.files[0]);
-                        
-                        try {
-                            const response = await fetch('/upload', {
-                                method: 'POST',
-                                body: formData
-                            });
-                            
-                            if (response.ok) {
-                                const htmlContent = await response.text();
-                                
-                                // Update the iframe content with the new graph that includes updated topic values
-                                iframe.srcdoc = htmlContent;
-                                
-                                console.log('Graph visualization updated successfully!');
-                            }
-                        } catch (error) {
-                            console.log('Could not update graph visualization:', error.message);
-                        }
-                    }
-                }
+                // Fetch the topic status from the publish endpoint without parameters
+                // This will return the current system status including graph information and topics
+                fetch('/publish')
+                    .then(response => response.text())
+                    .then(statusHtml => {
+                        // Send the system status to the parent frame's right panel
+                        window.parent.postMessage({
+                            action: 'showTopicDataInRightPanel',
+                            content: statusHtml
+                        }, '*');
+                        console.log('System Status updated in right panel after configuration upload');
+                    })
+                    .catch(error => {
+                        console.error('Error fetching system status:', error);
+                    });
             } catch (error) {
-                console.log('Graph update error:', error.message);
+                console.error('Error updating system status:', error);
             }
         }
+
+        // Helper function to update the right panel with topic data
+        function updateGraphWithTopicData(htmlResponse) {
+            try {
+                // Send the updated topic data to the parent frame's right panel (System Status)
+                window.parent.postMessage({
+                    action: 'showTopicDataInRightPanel',
+                    content: htmlResponse
+                }, '*');
+                
+                // Also trigger a graph update in the center panel to show real-time changes
+                updateCenterGraphWithRealTimeData();
+                
+                console.log('Topic data sent to right panel (System Status) and graph updated');
+            } catch (error) {
+                console.error('Error updating right panel with topic data:', error);
+            }
+        }
+
+        // Helper function to update the center panel with real-time graph
+        function updateCenterGraphWithRealTimeData() {
+            try {
+                // Fetch updated graph with current topic values
+                fetch('/graph')
+                    .then(response => response.text())
+                    .then(graphHtml => {
+                        // Send the updated graph to the parent frame's center panel
+                        window.parent.postMessage({
+                            action: 'showGeneratedGraph',
+                            content: graphHtml
+                        }, '*');
+                        console.log('Real-time graph update sent to center panel');
+                    })
+                    .catch(error => {
+                        console.error('Error fetching updated graph:', error);
+                    });
+            } catch (error) {
+                console.error('Error updating center panel with real-time graph:', error);
+            }
+        }
+
+        // Clear message history table
+        function clearMessageHistory() {
+            const resultsBody = document.getElementById('resultsBody');
+            const resultsContainer = document.getElementById('resultsContainer');
+            
+            if (resultsBody) {
+                // Clear all table rows
+                resultsBody.innerHTML = '';
+                
+                // Hide the results container since there are no messages
+                if (resultsContainer) {
+                    resultsContainer.style.display = 'none';
+                }
+                
+                console.log('Message history cleared after configuration upload');
+            }
+        }
+
     </script>
 </body>
 </html>

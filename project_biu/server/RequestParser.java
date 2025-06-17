@@ -3,14 +3,15 @@ package server;
 import java.io.*;
 import java.util.*;
 
-public class RequestParser {
-
-    public static RequestInfo parseRequest(BufferedReader reader) throws IOException {
+public class RequestParser {    public static RequestInfo parseRequest(BufferedReader reader) throws IOException {
         String requestLine = reader.readLine();
         
         if (requestLine == null || requestLine.isEmpty()) {
+            System.err.println("[DEBUG] Received null or empty request line");
             throw new IOException("Empty request line");
         }
+        
+        System.err.println("[DEBUG] Request line: " + requestLine);
 
         String[] requestParts = requestLine.split(" ");
         
@@ -100,39 +101,50 @@ public class RequestParser {
                     }
                 }
             }
-        }
-        else {
+        }        else {
             // Read all
             StringBuilder firstReader = new StringBuilder();
             StringBuilder secondReader = new StringBuilder();
             
-            // Parse first section
+            // Parse first section (headers/parameters)
             while (reader.ready()) {
                 // Read line and append to string builder
                 line = reader.readLine();
                
-                if (line.isEmpty()) {
+                if (line == null || line.isEmpty()) {
                     break;
                 } 
                 
                 firstReader.append(line).append("\n");
             }
                 
+            // Give a small pause to allow data to arrive if it's delayed
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
 
-            // Parse second section
+            // Parse second section (content)
             while (reader.ready()) {
                 // Read line and append to string builder
                 line = reader.readLine();
                 
-                if (line.isEmpty()) {
+                if (line == null || line.isEmpty()) {
                     break;
                 } 
                 
                 secondReader.append(line).append("\n");
             }
             
-            if(secondReader.length() == 0 && firstReader.length() == 0)
-                throw new IOException("Invalid request format");
+            // Handle case where both readers are empty (likely a connection issue or malformed request)
+            if(secondReader.length() == 0 && firstReader.length() == 0) {
+                System.err.println("[DEBUG] firstReader: '" + firstReader.toString() + "'");
+                System.err.println("[DEBUG] secondReader: '" + secondReader.toString() + "'");
+                System.err.println("[DEBUG] Possible connection issue or malformed request - ignoring");
+                // Instead of throwing an exception, return a minimal valid request
+                return new RequestInfo(httpCommand, uri, uriSegments, parameters, content);
+            }
             
             else if(secondReader.length() == 0) {
                 contentReader = firstReader;
