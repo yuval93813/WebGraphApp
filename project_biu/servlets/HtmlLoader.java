@@ -1,7 +1,7 @@
 package servlets;
 
-import server.RequestParser.RequestInfo;
 import java.io.*;
+import server.RequestParser.RequestInfo;
 
 public class HtmlLoader implements Servlet {
     private final String htmlDir;

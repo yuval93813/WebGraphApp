@@ -1,8 +1,8 @@
 package views;
 
 import graph.Graph;
-import graph.Node;
 import graph.Message;
+import graph.Node;
 import java.util.*;
 
 public class HtmlGraphWriter {
@@ -25,36 +25,66 @@ public class HtmlGraphWriter {
             return svg;
         }
         
-        // Center the graph in a 800x600 viewBox
-        int cx = 400, cy = 300, r = Math.min(180, 250 - n * 5); // Adjust radius based on node count
+        // Center the graph in a LARGER viewBox and spread elements across it
+        int canvasWidth = 800;   // Full width of viewBox
+        int canvasHeight = 600;   // Full height of viewBox
         Map<Node, Integer[]> nodePos = new HashMap<>();
-        Map<Node, Integer> nodeRadii = new HashMap<>(); // Store calculated radii for each node
-        int i = 0;
-        
-        // First pass: find maximum agent radius
-        int maxAgentRadius = 25; // Default minimum
+        Map<Node, Integer> nodeRadii = new HashMap<>();
+
+        // First pass: FIXED agent radius
+        int maxAgentRadius = 40; // FIXED SIZE - changed from 35 to 40
+
+        // Second pass: SPREAD ELEMENTS ACROSS FULL CANVAS using grid layout
+        List<Node> nodeList = new ArrayList<>();
         for (Node node : g) {
-            String nodeName = node.getName();
-            String displayName = nodeName;
-            if (displayName.startsWith("T") || displayName.startsWith("A")) {
-                displayName = displayName.substring(1);
+            nodeList.add(node);
+        }
+
+        // Calculate grid dimensions to spread nodes across full canvas
+        int cols = (int) Math.ceil(Math.sqrt(n));
+        int rows = (int) Math.ceil((double) n / cols);
+
+        // Calculate spacing to use full canvas
+        int horizontalSpacing = (canvasWidth - 200) / Math.max(1, cols - 1); // 200px margin (100px each side)
+        int verticalSpacing = (canvasHeight - 200) / Math.max(1, rows - 1);   // 200px margin (100px each side)
+
+        // Starting positions (with margins)
+        int startX = 100; // Left margin
+        int startY = 100; // Top margin
+
+        // If only one row/col, center the elements
+        if (cols == 1) {
+            startX = canvasWidth / 2;
+        }
+        if (rows == 1) {
+            startY = canvasHeight / 2;
+        }
+
+        for (int i = 0; i < n; i++) {
+            Node node = nodeList.get(i);
+            
+            // Calculate grid position
+            int row = i / cols;
+            int col = i % cols;
+            
+            // Calculate actual pixel position
+            int x, y;
+            
+            if (cols == 1) {
+                x = startX; // Center horizontally if single column
+            } else {
+                x = startX + col * horizontalSpacing;
             }
             
-            // Only check agents (not topics) for maximum radius
-            if (nodeName.startsWith("A")) {
-                int textWidth = displayName.length() * 8;
-                int requiredRadius = Math.max(25, textWidth / 2 + 10);
-                maxAgentRadius = Math.max(maxAgentRadius, requiredRadius);
+            if (rows == 1) {
+                y = startY; // Center vertically if single row
+            } else {
+                y = startY + row * verticalSpacing;
             }
-        }
-        
-        // Second pass: calculate positions and assign sizes
-        for (Node node : g) {
-            double angle = 2 * Math.PI * i / Math.max(1, n);
-            int x = (int)(cx + r * Math.cos(angle));
-            int y = (int)(cy + r * Math.sin(angle));
+            
             nodePos.put(node, new Integer[]{x, y});
             
+            // Assign node radius (keep existing logic)
             String nodeName = node.getName();
             String displayName = nodeName;
             if (displayName.startsWith("T") || displayName.startsWith("A")) {
@@ -62,16 +92,12 @@ public class HtmlGraphWriter {
             }
             
             if (nodeName.startsWith("A")) {
-                // All agents use the same maximum radius
-                nodeRadii.put(node, maxAgentRadius);
+                nodeRadii.put(node, 40); // FIXED SIZE - changed from 35 to 40
             } else {
-                // Topics remain adaptive to their individual text length
                 int textWidth = displayName.length() * 8;
                 int minRadius = Math.max(25, textWidth / 2 + 10);
                 nodeRadii.put(node, minRadius);
             }
-            
-            i++;
         }
         
         // Edges with arrowheads - calculate connection points to avoid overlapping with nodes
@@ -170,21 +196,29 @@ public class HtmlGraphWriter {
             }
             
             if (isTopic) {
-                // Topics as adaptive rectangles
-                int rectWidth = Math.max(nodeRadius * 2, displayName.length() * 10 + 20);
-                int rectHeight = 40;
+                // Topics as adaptive rectangles with message INSIDE - MAINTAIN MINIMUM SIZE
+                int nameWidth = displayName.length() * 10 + 20;
+                int msgWidth = msgText.length() * 8 + 20;
+                int minWidth = Math.max(nodeRadius * 2, 80); // MINIMUM width of 80px
+                int rectWidth = Math.max(minWidth, Math.max(nameWidth, msgWidth));
+                int rectHeight = 60; // Fixed height to fit both name and message
+                
                 svg.add(String.format("<rect class='topic-node' x='%d' y='%d' width='%d' height='%d' rx='8' />", 
                     pos[0] - rectWidth/2, pos[1] - rectHeight/2, rectWidth, rectHeight));
+                // Topic name in the upper part of rectangle
                 svg.add(String.format("<text x='%d' y='%d' text-anchor='middle' alignment-baseline='middle' class='topic-text'>%s</text>", 
-                    pos[0], pos[1], displayName));
-                // Show topic value above the topic
-                svg.add(String.format("<text x='%d' y='%d' text-anchor='middle' alignment-baseline='baseline' class='value-text'>%s</text>", 
-                    pos[0], pos[1] - rectHeight/2 - 15, msgText));
+                    pos[0], pos[1] - 10, displayName));
+                // Message in the lower part of rectangle (INSIDE THE BOX)
+                svg.add(String.format("<text x='%d' y='%d' text-anchor='middle' alignment-baseline='middle' class='value-text' fill='white' font-size='11px'>%s</text>", 
+                    pos[0], pos[1] + 12, msgText));
             } else {
-                // Agents as adaptive circles
-                svg.add(String.format("<circle class='agent-node' cx='%d' cy='%d' r='%d'/>", pos[0], pos[1], nodeRadius));
-                svg.add(String.format("<text x='%d' y='%d' text-anchor='middle' alignment-baseline='middle' class='agent-text'>%s</text>", 
-                    pos[0], pos[1], displayName));
+                // Agents as FIXED SIZE circles with ONLY NAME (no message)
+                int fixedRadius = 40; // FIXED SIZE - changed from 35 to 40
+                
+                svg.add(String.format("<circle class='agent-node' cx='%d' cy='%d' r='%d'/>", pos[0], pos[1], fixedRadius));
+                // Agent name CENTERED in circle (no message)
+                svg.add(String.format("<text x='%d' y='%d' text-anchor='middle' alignment-baseline='middle' class='agent-text' font-size='12px'>%s</text>", 
+                    pos[0], pos[1], displayName)); // Agent name centered
             }
         }
         return svg;
