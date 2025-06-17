@@ -132,7 +132,7 @@
         
         <!-- Results Table -->
         <div id="resultsContainer" style="display: none;">
-            <h4>📊 Message Results:</h4>
+            <h4>📊 Messages History:</h4>
             <table class="results-table" id="resultsTable">
                 <thead>
                     <tr>
@@ -184,11 +184,17 @@
                     const result = await response.text();
                     showStatus(statusDiv, 'Configuration deployed successfully!', 'success');
                     
+                    // Clear message history when new configuration is uploaded
+                    clearMessageHistory();
+                    
                     // Send the generated graph HTML to the parent frame's center panel
                     window.parent.postMessage({
                         action: 'showGeneratedGraph',
                         content: result
                     }, '*');
+                    
+                    // Also fetch and display the System Status after configuration upload
+                    fetchAndUpdateSystemStatus();
                 } else {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
@@ -225,17 +231,31 @@
                 
                 if (response.ok) {
                     const result = await response.text();
-                    showStatus(statusDiv, 'Message sent successfully!', 'success');
                     
-                    // Add result to table
-                    addResultToTable(topic, message, 'Success');
+                    // Check if the response contains an error message or success message
+                    const isError = result.includes('❌ Error:');
+                    const isSuccess = result.includes('✅ Success:');
                     
-                    // Update the graph with the actual topic data
+                    if (isError) {
+                        // Extract error message from the response
+                        const errorMatch = result.match(/❌ Error:<\/strong>\s*([^<]+)/);
+                        const errorText = errorMatch ? errorMatch[1].trim() : 'Unknown error occurred';
+                        showStatus(statusDiv, `Error: ${errorText}`, 'error');
+                        addResultToTable(topic, message, 'Error');
+                    } else if (isSuccess) {
+                        showStatus(statusDiv, 'Message sent successfully!', 'success');
+                        addResultToTable(topic, message, 'Success');
+                        // Clear form on success
+                        document.getElementById('topic').value = '';
+                        document.getElementById('message').value = '';
+                    } else {
+                        // Fallback case
+                        showStatus(statusDiv, 'Message processed', 'success');
+                        addResultToTable(topic, message, 'Processed');
+                    }
+                    
+                    // Update the graph with the actual topic data (always do this)
                     updateGraphWithTopicData(result);
-                    
-                    // Clear form
-                    document.getElementById('topic').value = '';
-                    document.getElementById('message').value = '';
                 } else {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
@@ -284,9 +304,38 @@
             if (status === 'Success') {
                 statusCell.style.color = 'green';
                 statusCell.style.fontWeight = 'bold';
+            } else if (status === 'Error') {
+                statusCell.style.color = 'red';
+                statusCell.style.fontWeight = 'bold';
+            } else if (status === 'Processed') {
+                statusCell.style.color = 'blue';
+                statusCell.style.fontWeight = 'bold';
             } else {
                 statusCell.style.color = 'red';
                 statusCell.style.fontWeight = 'bold';
+            }
+        }
+
+        // Helper function to fetch and update System Status panel
+        function fetchAndUpdateSystemStatus() {
+            try {
+                // Fetch the topic status from the publish endpoint without parameters
+                // This will return the current system status including graph information and topics
+                fetch('/publish')
+                    .then(response => response.text())
+                    .then(statusHtml => {
+                        // Send the system status to the parent frame's right panel
+                        window.parent.postMessage({
+                            action: 'showTopicDataInRightPanel',
+                            content: statusHtml
+                        }, '*');
+                        console.log('System Status updated in right panel after configuration upload');
+                    })
+                    .catch(error => {
+                        console.error('Error fetching system status:', error);
+                    });
+            } catch (error) {
+                console.error('Error updating system status:', error);
             }
         }
 
@@ -327,6 +376,24 @@
                     });
             } catch (error) {
                 console.error('Error updating center panel with real-time graph:', error);
+            }
+        }
+
+        // Clear message history table
+        function clearMessageHistory() {
+            const resultsBody = document.getElementById('resultsBody');
+            const resultsContainer = document.getElementById('resultsContainer');
+            
+            if (resultsBody) {
+                // Clear all table rows
+                resultsBody.innerHTML = '';
+                
+                // Hide the results container since there are no messages
+                if (resultsContainer) {
+                    resultsContainer.style.display = 'none';
+                }
+                
+                console.log('Message history cleared after configuration upload');
             }
         }
 

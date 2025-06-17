@@ -121,7 +121,6 @@ public class ConfLoader implements Servlet {
         html.append(".value-text{fill:#0066CC;font-weight:bold;font-size:10px;}");
         html.append(".result-text{fill:#CC6600;font-weight:bold;font-size:10px;}");
         html.append(".message-text{fill:#333;font-size:10px;font-weight:normal;}");
-        html.append(".info-panel{margin-top:20px;background:#f8f9fa;padding:15px;border-radius:8px;}");
         html.append("a{display:inline-block;margin-top:15px;padding:10px 20px;background:#007bff;color:white;text-decoration:none;border-radius:4px;}");
         html.append("a:hover{background:#0056b3;}");
         html.append("</style>");
@@ -133,13 +132,7 @@ public class ConfLoader implements Servlet {
             html.append(svgLine);
         }
         html.append("</svg></div>");
-        html.append("<div class='info-panel'><h4>📊 Graph Information</h4><div id='graphInfo'>");
-        html.append("Nodes: ").append(graph.size()).append("<br/>");
-        html.append("Cycles: ").append(graph.hasCycles() ? "Yes" : "No");
-        html.append("</div></div>");
-        html.append("<a href='/app/index.html'>← Back to Dashboard</a>");
-        html.append("</div>"); // Close graph-container
-        html.append("</body></html>");
+
 
         // 4. Send HTTP response
         String response = "HTTP/1.1 200 OK\r\n" +

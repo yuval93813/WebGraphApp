@@ -114,14 +114,9 @@ public class GraphUpdateServlet implements Servlet {
         writer.println("        .agent-text { fill: white; font-weight: bold; font-size: 12px; }");
         
         // Value and result text
-        writer.println("        .value-text { fill: #0066CC; font-weight: bold; font-size: 11px; }");
-        writer.println("        .result-text { fill: #CC6600; font-weight: bold; font-size: 11px; }");
-        writer.println("        .message-text { fill: #333; font-size: 10px; font-weight: normal; }");
-        
-        // Info panel
-        writer.println("        .info-panel { margin-top: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; }");
-        writer.println("        .btn { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin: 0 5px; font-size: 14px; text-decoration: none; display: inline-block; }");
-        writer.println("        .btn:hover { background: #0056b3; }");
+        writer.println("        .value-text { fill: #0066CC; font-weight: bold; font-size: 16px; }");
+        writer.println("        .result-text { fill: #CC6600; font-weight: bold; font-size: 16px; }");
+        writer.println("        .message-text { fill: #333; font-size: 16px; font-weight: normal; }");
         writer.println("    </style>");
         writer.println("</head>");
         writer.println("<body>");
@@ -141,32 +136,6 @@ public class GraphUpdateServlet implements Servlet {
         
         writer.println("            </svg>");
         writer.println("        </div>");
-        
-        // Info panel
-        writer.println("        <div class='info-panel'>");
-        writer.println("            <h4>📊 Graph Information</h4>");
-        writer.println("            <div id='graphInfo'>");
-        writer.println("                <p><strong>Nodes:</strong> " + graph.size() + "</p>");
-        writer.println("                <p><strong>Topics:</strong> " + TopicManagerSingleton.get().getTopics().size() + "</p>");
-        writer.println("                <p><strong>Has Cycles:</strong> " + (graph.hasCycles() ? "Yes" : "No") + "</p>");
-        writer.println("                <p><strong>Status:</strong> Real-time visualization showing current topic values and agent results</p>");
-        
-        // Display topic values
-        if (!TopicManagerSingleton.get().getTopics().isEmpty()) {
-            writer.println("                <p><strong>Current Topic Values:</strong></p>");
-            writer.println("                <ul>");
-            for (Topic topic : TopicManagerSingleton.get().getTopics()) {
-                String value = topic.getResult();
-                if (value == null || value.isEmpty()) {
-                    value = "<em>No value</em>";
-                }
-                writer.println("                    <li><strong>" + escapeHtml(topic.name) + ":</strong> " + escapeHtml(value) + "</li>");
-            }
-            writer.println("                </ul>");
-        }
-        
-        writer.println("            </div>");
-        writer.println("        </div>");
         writer.println("    </div>");
         
         // JavaScript - no auto-refresh, graph updates only when needed
@@ -179,20 +148,6 @@ public class GraphUpdateServlet implements Servlet {
         writer.println("</html>");
         
         writer.flush();
-    }
-
-    /**
-     * Escapes HTML special characters to prevent XSS attacks and ensure proper display.
-     */
-    private String escapeHtml(String text) {
-        if (text == null) {
-            return "";
-        }
-        return text.replace("&", "&amp;")
-                   .replace("<", "&lt;")
-                   .replace(">", "&gt;")
-                   .replace("\"", "&quot;")
-                   .replace("'", "&#x27;");
     }
 
     @Override
