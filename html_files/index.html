@@ -85,7 +85,16 @@
     </div>
 
     <script>
-        // Function to update center panel with graph
+        // Function to update center panel with generated graph content
+        function showGeneratedGraph(content) {
+            const centerFrame = document.getElementById('centerFrame');
+            // Write the generated HTML content directly to the iframe
+            centerFrame.contentDocument.open();
+            centerFrame.contentDocument.write(content);
+            centerFrame.contentDocument.close();
+        }
+        
+        // Function to update center panel with static graph
         function showGraph() {
             document.getElementById('centerFrame').src = 'graph.html';
         }
@@ -97,7 +106,9 @@
         
         // Listen for messages from child frames
         window.addEventListener('message', function(event) {
-            if (event.data.action === 'showGraph') {
+            if (event.data.action === 'showGeneratedGraph') {
+                showGeneratedGraph(event.data.content);
+            } else if (event.data.action === 'showGraph') {
                 showGraph();
             } else if (event.data.action === 'resetCenter') {
                 resetCenter();

@@ -57,11 +57,25 @@ public class MyHTTPServer extends Thread implements HTTPServer{
             default:
                 throw new IllegalArgumentException("Unsupported HTTP command: " + httpCommand);
         }
-    }
-
-    // Run server method (apply by start)
+    }    // Run server method (apply by start)
     public void run(){
-        try {
+        try {            // Redirect System.err to a log file
+            try {
+                String logDir = System.getProperty("user.dir");
+                File logFile = new File(logDir, "server_error.log");
+                
+                // Create parent directories if they don't exist
+                logFile.getParentFile().mkdirs();
+                
+                PrintStream logStream = new PrintStream(new FileOutputStream(logFile, true));
+                System.setErr(logStream);
+                System.out.println("Error logging enabled. Log file: " + logFile.getAbsolutePath());
+            } catch (FileNotFoundException e) {
+                System.out.println("Could not open server_error.log for writing error logs: " + e.getMessage());
+                e.printStackTrace();
+            } catch (SecurityException e) {
+                System.out.println("Permission denied creating log file: " + e.getMessage());
+            }
             serverSocket = new ServerSocket(port);
             threadPool = Executors.newFixedThreadPool(numberOfThreads);
             System.out.println("HTTP server started on port " + port);
@@ -123,14 +137,22 @@ public class MyHTTPServer extends Thread implements HTTPServer{
         for(Servlet servlet : deleteHttpCommandMap.values()) {
             servlet.close();
         }
-    }
-
-    // Handle client request
+    }    // Handle client request
     private void handleRequest(Socket clientSocket) {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
              OutputStream out = clientSocket.getOutputStream()) {
+            
             // Parse request
-            RequestInfo requestInfo = RequestParser.parseRequest(reader);
+            RequestInfo requestInfo = null;
+            try {
+                requestInfo = RequestParser.parseRequest(reader);
+            } catch (IOException e) {
+                System.err.println("[ERROR] Failed to parse request: " + e.getMessage());
+                // Send a proper HTTP error response
+                out.write("HTTP/1.1 400 Bad Request\r\n\r\nBad Request".getBytes());
+                return;
+            }
+            
             Servlet servlet = null;
             
             // Match the URI to the servlet with the longest prefix

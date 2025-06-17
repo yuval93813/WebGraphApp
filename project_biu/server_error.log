@@ -1,0 +1,296 @@
+[DEBUG] firstReader: ''
+[DEBUG] secondReader: ''
+java.io.IOException: Invalid request format
+	at server.RequestParser.parseRequest(RequestParser.java:137)
+	at server.MyHTTPServer.handleRequest(MyHTTPServer.java:147)
+	at server.MyHTTPServer.lambda$run$0(MyHTTPServer.java:88)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+[DEBUG] Request line: GET /app/index.html HTTP/1.1
+[DEBUG] Request line: GET /app/form.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Request line: GET /app/graph.html HTTP/1.1
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Request line: GET /app/graph.html HTTP/1.1
+[DEBUG] Request line: GET /app/index.html HTTP/1.1
+[DEBUG] Request line: GET /app/form.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Request line: GET /app/index.html HTTP/1.1
+[DEBUG] Request line: GET /app/form.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Request line: GET /app/index.html HTTP/1.1
+[DEBUG] Request line: GET /app/form.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: POST /upload HTTP/1.1
+java.lang.RuntimeException: Failed to create agent: ------WebKitFormBoundary6W6zURQptMBXZXTq
+	at configs.GenericConfig.create(GenericConfig.java:82)
+	at servlets.ConfLoader.handle(ConfLoader.java:52)
+	at server.MyHTTPServer.handleRequest(MyHTTPServer.java:172)
+	at server.MyHTTPServer.lambda$run$0(MyHTTPServer.java:88)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.lang.ClassNotFoundException: ------WebKitFormBoundary6W6zURQptMBXZXTq
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:421)
+	at java.base/java.lang.Class.forName(Class.java:412)
+	at configs.GenericConfig.create(GenericConfig.java:73)
+	... 6 more
+[DEBUG] Request line: POST /upload HTTP/1.1
+java.lang.RuntimeException: Failed to create agent: ------WebKitFormBoundaryMmXUPGABjXIs8GpL
+	at configs.GenericConfig.create(GenericConfig.java:82)
+	at servlets.ConfLoader.handle(ConfLoader.java:52)
+	at server.MyHTTPServer.handleRequest(MyHTTPServer.java:172)
+	at server.MyHTTPServer.lambda$run$0(MyHTTPServer.java:88)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.lang.ClassNotFoundException: ------WebKitFormBoundaryMmXUPGABjXIs8GpL
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:421)
+	at java.base/java.lang.Class.forName(Class.java:412)
+	at configs.GenericConfig.create(GenericConfig.java:73)
+	... 6 more
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Raw content length: 82
+[DEBUG] Content preview: graph.PlusAgent
+input_a,input_b
+sum_output
+graph.IncAgent
+sum_output
+final_result
+
+[DEBUG] Processing as plain content
+[DEBUG] Cleared previous topics
+[DEBUG] About to create config from file: /var/folders/f5/gsx5dxy538z0xyk3rpdwmjqr0000gn/T/conf_upload_6100931789334414986.conf
+[DEBUG] Config created successfully
+[DEBUG] Graph created with 6 nodes
+[DEBUG] Topics in TopicManager: 4
+[DEBUG] Request line: GET /app/index.html HTTP/1.1
+[DEBUG] Request line: GET /app/form.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: GET /app/index.html HTTP/1.1
+[DEBUG] Request line: GET /app/form.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Raw content length: 82
+[DEBUG] Content preview: graph.PlusAgent
+input_a,input_b
+sum_output
+graph.IncAgent
+sum_output
+final_result
+
+[DEBUG] Processing as plain content
+[DEBUG] Cleared previous topics
+[DEBUG] About to create config from file: /var/folders/f5/gsx5dxy538z0xyk3rpdwmjqr0000gn/T/conf_upload_771844507283443170.conf
+[DEBUG] Config created successfully
+[DEBUG] Graph created with 6 nodes
+[DEBUG] Topics in TopicManager: 4
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Raw content length: 154
+[DEBUG] Content preview: ------WebKitFormBoundaryjpD3hSncFChLxy9r
+Content-Disposition: form-data; name="configFile"; filename="simple.conf"
+Content-Type: application/octet-stream
+
+[DEBUG] Processing as plain content
+[DEBUG] Cleared previous topics
+[DEBUG] About to create config from file: /var/folders/f5/gsx5dxy538z0xyk3rpdwmjqr0000gn/T/conf_upload_10412736449649764767.conf
+java.lang.RuntimeException: Failed to create agent: ------WebKitFormBoundaryjpD3hSncFChLxy9r
+	at configs.GenericConfig.create(GenericConfig.java:82)
+	at servlets.ConfLoader.handle(ConfLoader.java:95)
+	at server.MyHTTPServer.handleRequest(MyHTTPServer.java:172)
+	at server.MyHTTPServer.lambda$run$0(MyHTTPServer.java:88)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.lang.ClassNotFoundException: ------WebKitFormBoundaryjpD3hSncFChLxy9r
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:421)
+	at java.base/java.lang.Class.forName(Class.java:412)
+	at configs.GenericConfig.create(GenericConfig.java:73)
+	... 6 more
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Raw content length: 41
+[DEBUG] Content preview: graph.PlusAgent
+A,B
+C
+graph.IncAgent
+C
+D
+
+[DEBUG] Processing as plain content
+[DEBUG] Cleared previous topics
+[DEBUG] About to create config from file: /var/folders/f5/gsx5dxy538z0xyk3rpdwmjqr0000gn/T/conf_upload_12354860982055496892.conf
+[DEBUG] Config created successfully
+[DEBUG] Graph created with 6 nodes
+[DEBUG] Topics in TopicManager: 4
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Raw content length: 82
+[DEBUG] Content preview: graph.PlusAgent
+input_a,input_b
+sum_output
+graph.IncAgent
+sum_output
+final_result
+
+[DEBUG] Processing as plain content
+[DEBUG] Cleared previous topics
+[DEBUG] About to create config from file: /var/folders/f5/gsx5dxy538z0xyk3rpdwmjqr0000gn/T/conf_upload_4272179551281721785.conf
+[DEBUG] Config created successfully
+[DEBUG] Graph created with 6 nodes
+[DEBUG] Topics in TopicManager: 4
+[DEBUG] Request line: GET /app/index.html HTTP/1.1
+[DEBUG] Request line: GET /app/form.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Raw content length: 162
+[DEBUG] Content preview: ------WebKitFormBoundaryYebIlILd3aycAxSz
+Content-Disposition: form-data; name="configFile"; filename="working_config.conf"
+Content-Type: application/octet-stream
+
+[DEBUG] Processing as plain content
+[DEBUG] Cleared previous topics
+[DEBUG] About to create config from file: /var/folders/f5/gsx5dxy538z0xyk3rpdwmjqr0000gn/T/conf_upload_13381777348373124095.conf
+java.lang.RuntimeException: Failed to create agent: ------WebKitFormBoundaryYebIlILd3aycAxSz
+	at configs.GenericConfig.create(GenericConfig.java:82)
+	at servlets.ConfLoader.handle(ConfLoader.java:95)
+	at server.MyHTTPServer.handleRequest(MyHTTPServer.java:172)
+	at server.MyHTTPServer.lambda$run$0(MyHTTPServer.java:88)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.lang.ClassNotFoundException: ------WebKitFormBoundaryYebIlILd3aycAxSz
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:421)
+	at java.base/java.lang.Class.forName(Class.java:412)
+	at configs.GenericConfig.create(GenericConfig.java:73)
+	... 6 more
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Raw content length: 82
+[DEBUG] Content preview: graph.PlusAgent
+input_a,input_b
+sum_output
+graph.IncAgent
+sum_output
+final_result
+
+[DEBUG] Processing as plain content
+[DEBUG] Cleared previous topics
+[DEBUG] About to create config from file: /var/folders/f5/gsx5dxy538z0xyk3rpdwmjqr0000gn/T/conf_upload_14461499955018628621.conf
+[DEBUG] Config created successfully
+[DEBUG] Graph created with 6 nodes
+[DEBUG] Topics in TopicManager: 4
+[DEBUG] Request line: GET /app/index.html HTTP/1.1
+[DEBUG] Request line: GET /app/form.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Raw content length: 162
+[DEBUG] Content preview: ------WebKitFormBoundaryZLlBFzR7V3zQiYmJ
+Content-Disposition: form-data; name="configFile"; filename="working_config.conf"
+Content-Type: application/octet-stream
+
+[DEBUG] Processing as plain content
+[DEBUG] Cleared previous topics
+[DEBUG] About to create config from file: /var/folders/f5/gsx5dxy538z0xyk3rpdwmjqr0000gn/T/conf_upload_16634308599663653059.conf
+java.lang.RuntimeException: Failed to create agent: ------WebKitFormBoundaryZLlBFzR7V3zQiYmJ
+	at configs.GenericConfig.create(GenericConfig.java:82)
+	at servlets.ConfLoader.handle(ConfLoader.java:95)
+	at server.MyHTTPServer.handleRequest(MyHTTPServer.java:172)
+	at server.MyHTTPServer.lambda$run$0(MyHTTPServer.java:88)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.lang.ClassNotFoundException: ------WebKitFormBoundaryZLlBFzR7V3zQiYmJ
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:421)
+	at java.base/java.lang.Class.forName(Class.java:412)
+	at configs.GenericConfig.create(GenericConfig.java:73)
+	... 6 more
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Raw content length: 82
+[DEBUG] Content preview: graph.PlusAgent
+input_a,input_b
+sum_output
+graph.IncAgent
+sum_output
+final_result
+
+[DEBUG] Processing as plain content
+[DEBUG] Cleared previous topics
+[DEBUG] About to create config from file: /var/folders/f5/gsx5dxy538z0xyk3rpdwmjqr0000gn/T/conf_upload_10325312585168018338.conf
+[DEBUG] Config created successfully
+[DEBUG] Graph created with 6 nodes
+[DEBUG] Topics in TopicManager: 4
+[DEBUG] Request line: GET /app/index.html HTTP/1.1
+[DEBUG] Request line: GET /app/form.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Raw content length: 82
+[DEBUG] Content preview: graph.PlusAgent
+input_a,input_b
+sum_output
+graph.IncAgent
+sum_output
+final_result
+
+[DEBUG] Processing as plain content
+[DEBUG] Cleared previous topics
+[DEBUG] About to create config from file: /var/folders/f5/gsx5dxy538z0xyk3rpdwmjqr0000gn/T/conf_upload_15744173567611415757.conf
+[DEBUG] Config created successfully
+[DEBUG] Graph created with 6 nodes
+[DEBUG] Topics in TopicManager: 4
+[DEBUG] Request line: GET /app/index.html HTTP/1.1
+[DEBUG] Request line: GET /app/form.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: GET /app/temp.html HTTP/1.1
+[DEBUG] Request line: POST /upload HTTP/1.1
+[DEBUG] Raw content length: 82
+[DEBUG] Content preview: graph.PlusAgent
+input_a,input_b
+sum_output
+graph.IncAgent
+sum_output
+final_result
+
+[DEBUG] Processing as plain content
+[DEBUG] Cleared previous topics
+[DEBUG] About to create config from file: /var/folders/f5/gsx5dxy538z0xyk3rpdwmjqr0000gn/T/conf_upload_17975102981390704359.conf
+[DEBUG] Config created successfully
+[DEBUG] Graph created with 6 nodes
+[DEBUG] Topics in TopicManager: 4
+Exception in thread "main" java.io.IOException: Input/output error
+	at java.base/java.io.FileInputStream.readBytes(Native Method)
+	at java.base/java.io.FileInputStream.read(FileInputStream.java:287)
+	at java.base/java.io.BufferedInputStream.fill(BufferedInputStream.java:291)
+	at java.base/java.io.BufferedInputStream.implRead(BufferedInputStream.java:325)
+	at java.base/java.io.BufferedInputStream.read(BufferedInputStream.java:312)
+	at Main.main(Main.java:18)

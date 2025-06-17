@@ -154,6 +154,11 @@
             const statusDiv = document.getElementById('uploadStatus');
             const fileInput = document.getElementById('configFile');
             
+            // Prevent multiple rapid submissions
+            if (deployBtn.disabled) {
+                return;
+            }
+            
             if (!fileInput.files[0]) {
                 showStatus(statusDiv, 'Please select a file to upload.', 'error');
                 return;
@@ -176,15 +181,11 @@
                     const result = await response.text();
                     showStatus(statusDiv, 'Configuration deployed successfully!', 'success');
                     
-                    // Tell parent frame to show graph
-                    window.parent.postMessage({action: 'showGraph'}, '*');
-                    
-                    // Send result to center panel
-                    const centerFrame = window.parent.document.getElementById('centerFrame');
-                    if (centerFrame) {
-                        // Update center frame to show graph with live data
-                        centerFrame.src = 'graph.html?live=true';
-                    }
+                    // Send the generated graph HTML to the parent frame's center panel
+                    window.parent.postMessage({
+                        action: 'showGeneratedGraph',
+                        content: result
+                    }, '*');
                 } else {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
@@ -192,9 +193,11 @@
                 showStatus(statusDiv, `Upload failed: ${error.message}`, 'error');
                 console.error('Upload error:', error);
             } finally {
-                // Re-enable button
-                deployBtn.disabled = false;
-                deployBtn.textContent = 'Deploy';
+                // Re-enable button after a short delay to prevent rapid requests
+                setTimeout(() => {
+                    deployBtn.disabled = false;
+                    deployBtn.textContent = 'Deploy';
+                }, 1000);
             }
         });
 
